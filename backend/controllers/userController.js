@@ -26,3 +26,29 @@ module.exports.registerUser=async (req,res,next)=>{
         return res.status(500).json({message:'Registration failed',error:err.message});
     }
 }
+
+//loging route backend program
+module.exports.loginUser=async(req,res,next)=>{
+    const errors=validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors:errors.array()})
+    }
+    try{
+        const  {email,password}=req.body
+        const user=await usermodel.findOne({email}).select('+password');
+        if (!user) {
+            return res.status(401).json({message:'invalid email'});
+        }
+        const isMatch=await user.comparePassword(password)
+        if(!isMatch){
+            return res.status(401).json({message:'invalid password'});
+
+        }
+        const token=user.generateAuthToken();
+        res.status(200).json({token,user})
+
+
+    }catch(error){
+        return res.status(401).json({message:'login  failed'});
+    }
+}
