@@ -185,3 +185,96 @@ curl -X POST http://localhost:3000/users/login \
     "password": "123456"
   }'
 ```
+
+---
+
+## User Profile Endpoint
+
+### GET /users/profile
+
+Returns the authenticated user's profile information.
+
+### Authentication
+
+Requires a valid JWT token sent either as an HTTP-only cookie named `token` or in the `Authorization` header as `Bearer <token>`.
+
+### Success Response
+
+#### Status: 200 OK
+
+```json
+{
+  "_id": "64abc123...",
+  "fullname": {
+    "firstname": "John",
+    "lastname": "Doe"
+  },
+  "email": "johndoe@example.com",
+  "socketId": null
+}
+```
+
+### Error Responses
+
+#### Status: 401 Unauthorized
+
+Returned when the token is missing, invalid, expired, or blacklisted.
+
+```json
+{
+  "message": "token not exist"
+}
+```
+
+```json
+{
+  "message": "invalid token"
+}
+```
+
+---
+
+## User Logout Endpoint
+
+### GET /users/logout
+
+Logs out the authenticated user by blacklisting the current token and clearing the `token` cookie.
+
+### Authentication
+
+Requires a valid JWT token sent either as an HTTP-only cookie named `token` or in the `Authorization` header as `Bearer <token>`.
+
+### Success Response
+
+#### Status: 200 OK
+
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+### Error Responses
+
+#### Status: 401 Unauthorized
+
+Returned when the token is missing or invalid.
+
+```json
+{
+  "message": "Token not found"
+}
+```
+
+```json
+{
+  "message": "unauthorized"
+}
+```
+
+### Example Request
+
+```bash
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer <token>"
+```

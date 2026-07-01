@@ -3,6 +3,7 @@ const router=express.Router();
 const {body}=require("express-validator");
 const {route}=require('../app');
 const userController=require('../controllers/userController')
+const authMiddleware=require('../middleware/auth.middleware')
 
 router.post('/register',[
     body('email').isEmail().withMessage('invalid mail'),
@@ -18,6 +19,10 @@ router.post('/login',[
 ],
     userController.loginUser
 )
+
+router.get('/profile',authMiddleware.authUser,userController.getUserProfile)
+
+router.get('/logout',authMiddleware.authUser,userController.logoutUser)
 
 
 

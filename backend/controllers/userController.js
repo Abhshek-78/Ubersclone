@@ -1,6 +1,7 @@
 const usermodel=require('../models/usermodel');
 const userServices=require('../services/user.sevice');
 const {validationResult}=require('express-validator');
+const blacklistTokenModel=require('../models/blacklist.model');
 
 module.exports.registerUser=async (req,res,next)=>{
     const errors=validationResult(req);
@@ -45,10 +46,44 @@ module.exports.loginUser=async(req,res,next)=>{
 
         }
         const token=user.generateAuthToken();
-        res.status(200).json({token,user})
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false,      // true only when using HTTPS
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({token,user});
 
 
     }catch(error){
         return res.status(401).json({message:'login  failed'});
     }
 }
+
+//for user profile
+module.exports.getUserProfile=async (req,res,next)=>{
+    res.status(200).json(req.user);
+}
+//logout
+module.exports.logoutUser = async (req, res, next) => {
+    const token =
+        req.cookies?.token ||
+        req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({
+            message: "Token not found"
+        });
+    }
+
+    res.clearCookie("token");
+
+    await blacklistTokenModel.create({ token });
+
+    return res.status(200).json({
+        message: "Logout successful"
+    });
+};
+ 
