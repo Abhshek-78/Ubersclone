@@ -9,6 +9,7 @@ import UserSignup from './pages/UserSignup';
 import UserLogin from './pages/UserLogin';
 import Landing from './pages/Landing';
 import UserLogout from './pages/UserLogout';
+import CaptainHome from './pages/CaptainHome';
 
 import './App.css';
 
@@ -23,8 +24,9 @@ function App() {
       <Route path="/home" 
         element={<UserProtectedWraper><Home /></UserProtectedWraper>} />
 
-      <Route path="/user-logout" 
-        element={<UserProtectedWraper><UserLogout /></UserProtectedWraper>} />
+      <Route path="/User-logout" element={<UserProtectedWraper><UserLogout /></UserProtectedWraper>} />
+      <Route path="Captain-home" element={<CaptainHome/>} />
+      
     </Routes>
   );
 }
