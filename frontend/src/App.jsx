@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import UserProtectedWraper from './pages/UserProtectedWraper';
+import CaptainProtectedWraper from './pages/CaptainProtedWrapper';
 
 import Home from './pages/Home';
 import CaptainSignup from './pages/CaptainSignup';
@@ -10,6 +11,7 @@ import UserLogin from './pages/UserLogin';
 import Landing from './pages/Landing';
 import UserLogout from './pages/UserLogout';
 import CaptainHome from './pages/CaptainHome';
+import CaptainLogout from './pages/CaptainLogout';
 
 import './App.css';
 
@@ -25,8 +27,8 @@ function App() {
         element={<UserProtectedWraper><Home /></UserProtectedWraper>} />
 
       <Route path="/User-logout" element={<UserProtectedWraper><UserLogout /></UserProtectedWraper>} />
-      <Route path="Captain-home" element={<CaptainHome/>} />
-      
+      <Route path="/Captain-home" element={<CaptainProtectedWraper><CaptainHome/></CaptainProtectedWraper  >} />
+      <Route path="/captain-logout" element={<CaptainLogout/>}></Route>
     </Routes>
   );
 }
