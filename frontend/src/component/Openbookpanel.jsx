@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 function Openbookpanel({
   vehicalpanel,
   setVehicalpanel,
   setSelectedVehicle,
   setConfirmRidePanel,
+  fares,
 }) {
   const rideOptions = [
     {
@@ -12,7 +13,7 @@ function Openbookpanel({
       name: "UberGo",
       capacity: 4,
       description: "Affordable, compact rides",
-      price: "₹193.20",
+      vehicleType: "car",
       image:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQCJRWXqN_BI1o00GppW5TLYY-2NLGpFsVAg3rOs4hlw&s=10",
     },
@@ -21,7 +22,7 @@ function Openbookpanel({
       name: "Moto",
       capacity: 1,
       description: "Affordable motorcycle rides",
-      price: "₹65.00",
+      vehicleType: "motorcycle",
       image: "https://cdn-icons-png.flaticon.com/128/11432/11432322.png",
     },
     {
@@ -29,14 +30,17 @@ function Openbookpanel({
       name: "UberAuto",
       capacity: 3,
       description: "No haggling, doorstep pickup",
-      price: "₹118.50",
+      vehicleType: "auto",
       image:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE_JyrWPd8oITTsdiEBAW9cmhLBcCU-GpR1Y6YXqfs2A&s=10",
     },
   ];
 
   const handleSelectRide = (ride) => {
-    setSelectedVehicle(ride);
+    setSelectedVehicle({
+      ...ride,
+      price: `₹${Number(fares[ride.vehicleType]).toFixed(2)}`,
+    });
     setVehicalpanel(false);
     setConfirmRidePanel(true);
   };
@@ -85,7 +89,7 @@ function Openbookpanel({
 
             <div className="text-right">
               <span className="font-bold text-lg text-gray-900">
-                {ride.price}
+                ₹{Number(fares?.[ride.vehicleType] || 0).toFixed(2)}
               </span>
             </div>
           </div>

@@ -1,5 +1,23 @@
 # Backend API Documentation
 
+## Map endpoints
+
+All map endpoints use the `/maps` prefix and require a user JWT:
+
+```text
+Authorization: Bearer <token>
+```
+
+Examples:
+
+```text
+GET /maps/getCoordinates?address=Bhopal
+GET /maps/get-distance-time?origin=Bhopal&destination=Indore
+GET /maps/get-suggestion?suggestion=Bhopal
+```
+
+The `address`, `origin`, `destination`, and `suggestion` values are query parameters, not JSON body fields. Add your Mapbox public token in the backend `.env` as `MAPBOX_API`.
+
 ## User Registration Endpoint
 
 ### POST /users/register
@@ -564,4 +582,84 @@ Returned when the token is missing or invalid.
 ```bash
 curl -X GET http://localhost:3000/users/logout \
   -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Get Ride Fare Endpoint
+
+### GET /rides/getFare
+
+Calculates the estimated fare for a ride using the pickup and destination locations. The endpoint requires an authenticated user JWT.
+
+The same endpoint is also available through the `/ride/getFare` alias.
+
+### Authentication
+
+Send a valid JWT either as an HTTP-only cookie named `token` or in the `Authorization` header:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Query Parameters
+
+- `pickup`: required, minimum 3 characters
+- `destination`: required, minimum 3 characters
+
+Query parameters must be sent in the URL, not in a JSON request body.
+
+### Success Response
+
+#### Status: 200 OK
+
+```json
+{
+  "car": 193,
+  "motorcycle": 108,
+  "auto": 143
+}
+```
+
+Fare values are estimated amounts based on the route distance and duration. The response contains fares for all supported vehicle types.
+
+### Error Responses
+
+#### Status: 400 Bad Request
+
+Returned when `pickup` or `destination` is missing or shorter than 3 characters.
+
+```json
+{
+  "errors": [
+    {
+      "msg": "invalid pickup",
+      "param": "pickup",
+      "location": "query"
+    }
+  ]
+}
+```
+
+#### Status: 401 Unauthorized
+
+Returned when the user JWT is missing, invalid, expired, or blacklisted.
+
+#### Status: 500 Internal Server Error
+
+Returned when fare calculation or route lookup fails.
+
+```json
+{
+  "message": "Choose pickup and destination address"
+}
+```
+
+### Example Request
+
+```bash
+curl -G http://localhost:3000/rides/getFare \
+  -H "Authorization: Bearer <token>" \
+  --data-urlencode "pickup=Bhopal" \
+  --data-urlencode "destination=Indore"
 ```

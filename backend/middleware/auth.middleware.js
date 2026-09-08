@@ -4,9 +4,27 @@ const usermodel=require('../models/usermodel');
 const bcrypt=require('bcrypt');
 const jwt=require('jsonwebtoken');
 
+const extractToken = (req) => {
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    if (typeof authHeader === 'string') {
+        const parts = authHeader.trim().split(/\s+/);
+        if (parts.length === 2 && /^bearer$/i.test(parts[0])) {
+            return parts[1];
+        }
+        if (parts.length === 1) {
+            return parts[0];
+        }
+    }
+
+    if (req.cookies?.token) return req.cookies.token;
+    if (req.headers['x-auth-token']) return req.headers['x-auth-token'];
+    if (req.headers.token) return req.headers.token;
+
+    return null;
+};
 
 module.exports.authUser = async (req, res, next) => {
-    const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+    const token = extractToken(req);
     if (!token) {
         return res.status(401).json({ message: "token not exist" });
     }
@@ -30,7 +48,7 @@ module.exports.authUser = async (req, res, next) => {
 };
 
 module.exports.authCaptain=async(req,res,next)=>{
-    const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+    const token = extractToken(req);
     if (!token) {
         return res.status(401).json({ message: "token not exist" });
     }

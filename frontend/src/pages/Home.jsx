@@ -7,6 +7,10 @@ import Openbookpanel from "../component/Openbookpanel";
 import ConfirmRidePanel from "../component/Confirmridepanel";
 import LookingForDriverPanel from "../component/LookingForDriverPanel";
 import WaitingForDriverPanel from "../component/WaitingForDriverPanel";
+import axios from "axios";
+import {SocketContext} from "../context/socketContext";
+import { useContext } from "react";
+import { useEffect } from "react";
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [vehicalpanel, setVehicalpanel] = useState(false);
@@ -16,8 +20,14 @@ function Home() {
 
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+  const [activeLocationField, setActiveLocationField] = useState("pickup");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-
+  const [fares, setFares] = useState(null);
+  const {sendMessage,receiveMessage}=useContext(SocketContext);
+  
+  useEffect(()=>{
+    sendMessage("join",{usertype:'user',userId:localStorage.getItem('useId')})
+  },[])
   // Backend state template for assigned driver
   const [driverData, setDriverData] = useState(null);
 
@@ -33,7 +43,7 @@ function Home() {
         vehicleName: selectedVehicle?.name || "UberGo",
         vehicleNumber: "DL 01 CX 9988",
         vehicleImage: selectedVehicle?.image,
-        price: selectedVehicle?.price || "₹193.20",
+        price: selectedVehicle?.price,
         otp: "7412",
         rating: "4.85",
       });
@@ -41,6 +51,42 @@ function Home() {
       setWaitingForDriver(true);
     }, 3000);
   };
+
+  async function findTrip(e) {
+    if (e) e.preventDefault();
+
+    if (!pickup.trim() || !destination.trim()) {
+      alert("Please enter both pickup and destination locations.");
+      return;
+    }
+
+    setIsExpanded(false);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/rides/getFare`, {
+        params: { pickup, destination },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setFares(response.data);
+      setVehicalpanel(true);
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to calculate the fare.");
+    }
+
+  }
+  async function createRide(vehicleType){
+    const response =await axios.post(`${import.meta.env.VITE_BASE_URL}.rides/create`,{
+      pickup,
+      destination,
+      vehicleType
+    },{
+      headers:{
+        Authorization:`Bearer${localStorage.getItem('token')}`
+      }
+    })
+  }
 
   return (
     <div className="h-screen relative overflow-hidden">
@@ -61,18 +107,19 @@ function Home() {
           {isExpanded && (
             <button
               onClick={() => setIsExpanded(false)}
-              className="text-black font-bold text-xl px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200"
+              className="text-black font-bold text-xl px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
             >
               ↓
             </button>
           )}
         </div>
 
-        <form onSubmit={(e) => e.preventDefault()} className="relative">
+        <form onSubmit={findTrip} className="relative">
           <div className="line absolute h-16 w-1 left-4 top-6 bg-slate-600 rounded-full" />
 
           <input
             onFocus={() => {
+              setActiveLocationField("pickup");
               setIsExpanded(true);
               setVehicalpanel(false);
               setConfirmRidePanel(false);
@@ -88,8 +135,8 @@ function Home() {
 
           <input
             onFocus={() => {
+              setActiveLocationField("destination");
               setIsExpanded(true);
-              setVehicalpanel(false);
               setConfirmRidePanel(false);
               setLookingForDriverPanel(false);
               setWaitingForDriver(false);
@@ -100,6 +147,13 @@ function Home() {
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
           />
+
+          <button
+            type="submit"
+            className="bg-black mt-4 w-full px-8 py-2 rounded font-bold text-white hover:bg-neutral-800 transition cursor-pointer"
+          >
+            Find ride
+          </button>
         </form>
 
         {isExpanded && (
@@ -108,12 +162,14 @@ function Home() {
               Recent Searches / Suggestions
             </p>
             <LocationSearchpanel
+              query={activeLocationField === "pickup" ? pickup : destination}
               onSelectLocation={(loc) => {
-                if (!pickup) setPickup(loc);
-                else {
+                if (activeLocationField === "pickup") {
+                  setPickup(loc);
+                  setActiveLocationField("destination");
+                } else {
                   setDestination(loc);
-                  setIsExpanded(false);
-                  setVehicalpanel(true);
+                  // Only sets destination now; does not auto-open the ride panel
                 }
               }}
             />
@@ -123,10 +179,12 @@ function Home() {
 
       {/* Ride Options Panel */}
       <Openbookpanel
+        fares={fares}
         vehicalpanel={vehicalpanel}
         setVehicalpanel={setVehicalpanel}
         setSelectedVehicle={setSelectedVehicle}
         setConfirmRidePanel={setConfirmRidePanel}
+
       />
 
       {/* Confirm Ride Panel */}
@@ -146,6 +204,9 @@ function Home() {
         selectedVehicle={selectedVehicle}
         pickup={pickup}
         destination={destination}
+        confirmRidePanel={confirmRidePanel}
+        setConfirmRidePanel={setConfirmRidePanel}
+        onConfirm={handleConfirmRide}
       />
 
       {/* Accepted / Waiting for Driver Panel */}

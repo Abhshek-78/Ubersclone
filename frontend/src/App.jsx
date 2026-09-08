@@ -12,6 +12,7 @@ import Landing from './pages/Landing';
 import UserLogout from './pages/UserLogout';
 import CaptainHome from './pages/CaptainHome';
 import CaptainLogout from './pages/CaptainLogout';
+import CaptainRiding from './pages/Captainriding';
 
 import './App.css';
 
@@ -29,6 +30,7 @@ function App() {
       <Route path="/User-logout" element={<UserProtectedWraper><UserLogout /></UserProtectedWraper>} />
       <Route path="/Captain-home" element={<CaptainProtectedWraper><CaptainHome/></CaptainProtectedWraper  >} />
       <Route path="/captain-logout" element={<CaptainLogout/>}></Route>
+      <Route path="/Ongoing-ride"  element={<CaptainRiding/>}></Route>
     </Routes>
   );
 }

@@ -13,7 +13,7 @@ function UserProtectedWraper({ children }) {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        console.log("User token:", token);
+       
 
         // No token
         if (!token) {
@@ -29,7 +29,7 @@ function UserProtectedWraper({ children }) {
                 },
             })
             .then((response) => {
-                console.log("Profile response:", response.data);
+                
 
                 if (response.status === 200) {
                     setUser(response.data);
@@ -38,7 +38,7 @@ function UserProtectedWraper({ children }) {
             .catch((error) => {
                 console.log(
                     "Profile error:",
-                    error.response?.data || error.message
+                    
                 );
 
                 localStorage.removeItem("token");
