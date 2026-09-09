@@ -1,4 +1,3 @@
-import React from "react";
 function WaitingForDriverPanel({
   waitingForDriver,
   setWaitingForDriver,
@@ -68,6 +67,12 @@ function WaitingForDriverPanel({
               {driver.vehicleNumber}
             </p>
             <p className="text-xs text-gray-500">{driver.vehicleName}</p>
+            {driver.vehicleColor && (
+              <p className="text-xs text-gray-500">Color: {driver.vehicleColor}</p>
+            )}
+            {driver.email && (
+              <p className="text-xs text-gray-500">{driver.email}</p>
+            )}
           </div>
         </div>
 

@@ -1,16 +1,24 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import mapimage from "../assets/map.png";
-import UserProtectedWraper from "./UserProtectedWraper";
 import LocationSearchpanel from "../component/LocationSearchpanel";
 import Openbookpanel from "../component/Openbookpanel";
 import ConfirmRidePanel from "../component/Confirmridepanel";
 import LookingForDriverPanel from "../component/LookingForDriverPanel";
 import WaitingForDriverPanel from "../component/WaitingForDriverPanel";
 import axios from "axios";
-import {SocketContext} from "../context/socketContext";
-import { useContext } from "react";
-import { useEffect } from "react";
+import { useSocket } from "../context/useSocket";
+
+function getUserId() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1]))._id;
+  } catch {
+    return null;
+  }
+}
+
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [vehicalpanel, setVehicalpanel] = useState(false);
@@ -23,33 +31,44 @@ function Home() {
   const [activeLocationField, setActiveLocationField] = useState("pickup");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [fares, setFares] = useState(null);
-  const {sendMessage,receiveMessage}=useContext(SocketContext);
-  
-  useEffect(()=>{
-    sendMessage("join",{usertype:'user',userId:localStorage.getItem('useId')})
-  },[])
-  // Backend state template for assigned driver
   const [driverData, setDriverData] = useState(null);
+  const { sendMessage, receiveMessage, isConnected } = useSocket();
+  
+  useEffect(() => {
+    const userId = getUserId();
+    if (userId) sendMessage("join", { userType: "user", userId });
 
-  const handleConfirmRide = () => {
-    setConfirmRidePanel(false);
-    setLookingForDriverPanel(true);
-
-    // Simulate backend driver acceptance after 3 seconds
-    setTimeout(() => {
+    return receiveMessage("ride-accepted", (ride) => {
       setDriverData({
-        name: "Rahul Verma",
-        photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdl152hZG22-iND4L3133f9Bip_f9-iO4B1A&s",
-        vehicleName: selectedVehicle?.name || "UberGo",
-        vehicleNumber: "DL 01 CX 9988",
-        vehicleImage: selectedVehicle?.image,
-        price: selectedVehicle?.price,
-        otp: "7412",
-        rating: "4.85",
+        name: ride.captain.name,
+        email: ride.captain.email,
+        vehicleColor: ride.captain.vehicle?.color,
+        vehicleCapacity: ride.captain.vehicle?.capacity,
+        vehicleName: ride.captain.vehicle?.vehicaltype,
+        vehicleNumber: ride.captain.vehicle?.plate,
+        price: ride.fare,
+        otp: ride.otp,
+        rating: ride.captain.rating || "New",
       });
       setLookingForDriverPanel(false);
       setWaitingForDriver(true);
-    }, 3000);
+    });
+  }, [isConnected, receiveMessage, sendMessage]);
+
+  useEffect(() => receiveMessage("ride-rejected", () => {
+    setLookingForDriverPanel(false);
+    setWaitingForDriver(false);
+    alert("A nearby captain declined this ride. Please try again.");
+  }), [receiveMessage]);
+  const handleConfirmRide = async () => {
+    setConfirmRidePanel(false);
+    setLookingForDriverPanel(true);
+    try {
+      await createRide(selectedVehicle?.vehicleType || selectedVehicle?.type || "car");
+    } catch (error) {
+      setLookingForDriverPanel(false);
+      alert(error.response?.data?.message || "Unable to book this ride.");
+    }
   };
 
   async function findTrip(e) {
@@ -77,13 +96,13 @@ function Home() {
 
   }
   async function createRide(vehicleType){
-    const response =await axios.post(`${import.meta.env.VITE_BASE_URL}.rides/create`,{
+    return axios.post(`${import.meta.env.VITE_BASE_URL}/rides/create`,{
       pickup,
       destination,
       vehicleType
     },{
       headers:{
-        Authorization:`Bearer${localStorage.getItem('token')}`
+        Authorization:`Bearer ${localStorage.getItem('token')}`
       }
     })
   }

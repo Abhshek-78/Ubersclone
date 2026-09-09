@@ -1,5 +1,6 @@
 const riderService = require('../services/ride.sevices');
 const { validationResult } = require('express-validator');
+const { dispatchRideRequest } = require('../socket');
 
 module.exports.createRide = async (req, res) => {
     const errors = validationResult(req);
@@ -19,6 +20,11 @@ module.exports.createRide = async (req, res) => {
             vehicalType: finalVehicleType,
         });
 
+        try {
+            await dispatchRideRequest(ride._id);
+        } catch (dispatchError) {
+            console.error('Ride dispatch failed:', dispatchError.message);
+        }
         return res.status(201).json(ride);
     } catch (err) {
         return res.status(500).json({ message: err.message });

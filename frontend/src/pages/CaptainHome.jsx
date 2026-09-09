@@ -1,7 +1,19 @@
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import mapimage from "../assets/map.png";
 import RidePopupPanel from "../component/RidePopupPanel";
+import { useSocket } from "../context/useSocket";
+
+function getCaptainId() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1]))._id;
+  } catch {
+    return null;
+  }
+}
 
 function CaptainHome() {
   const navigate = useNavigate();
@@ -9,6 +21,79 @@ function CaptainHome() {
   const [isOnline, setIsOnline] = useState(true);
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
+  const { sendMessage, receiveMessage, isConnected } = useSocket();
+  const captainId = getCaptainId();
+  const hasJoinedRef = useRef(false);
+
+  useEffect(() => {
+    if (!captainId) return undefined;
+
+    const join = (location) => sendMessage("join", {
+      userType: "captain",
+      userId: captainId,
+      location,
+    });
+
+
+    const removeRequestListener = receiveMessage("ride-request", (request) => {
+      setRideRequest({
+        ...request,
+        user: {
+          ...request.user,
+          photo: request.user?.photo,
+          rating: request.user?.rating || "New",
+          trips: request.user?.trips || "New rider",
+        },
+        distanceToPickup: request.distanceToPickup || "Location unavailable",
+        tripDistance: request.tripDistance || "Route",
+        paymentType: "Cash / UPI",
+      });
+      setRidePopupPanel(true);
+    });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => join({ ltd: coords.latitude, log: coords.longitude }),
+        ({ coords }) => {
+          hasJoinedRef.current = true;
+          join({ ltd: coords.latitude, log: coords.longitude });
+        },
+        () => {
+          hasJoinedRef.current = true;
+          join(undefined);
+        },
+      );
+    } else {
+      hasJoinedRef.current = true;
+      join(undefined);
+    }
+
+    const watchId = navigator.geolocation?.watchPosition(
+      ({ coords }) => {
+        const location = { ltd: coords.latitude, log: coords.longitude };
+        if (!hasJoinedRef.current) {
+          hasJoinedRef.current = true;
+          join(location);
+          return;
+        }
+        sendMessage("captain-location", { captainId, location });
+      },
+      () => {},
+    );
+
+    return () => {
+      if (watchId !== undefined) navigator.geolocation?.clearWatch(watchId);
+      hasJoinedRef.current = false;
+      removeRequestListener();
+    };
+  }, [captainId, receiveMessage, sendMessage]);
+
+  useEffect(() => {
+    if (captainId) sendMessage("captain-status", { captainId, isOnline });
+  }, [captainId, isOnline, isConnected, sendMessage]);
+
+  useEffect(() => receiveMessage("socket-error", ({ message }) => {
+    console.error("Socket registration failed:", message);
+  }), [receiveMessage]);
 
   const captain = {
     name: "Harsh Sharma",
@@ -26,34 +111,17 @@ function CaptainHome() {
     navigate("/captain-login");
   };
 
-  // Demo simulator to test customer ride request popup
-  const triggerRideRequest = () => {
-    setRideRequest({
-      user: {
-        name: "Abhishek Sharma",
-        phone: "+91 91234 56789",
-        photo:
-          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-        rating: "4.9",
-        trips: "28 trips",
-      },
-      fare: "248.00",
-      distanceToPickup: "1.2 km (3 mins away)",
-      tripDistance: "9.4 km",
-      pickup: "Knowledge Park III, Greater Noida, UP",
-      destination: "Botanical Garden Metro Station, Noida",
-      paymentType: "UPI / Cash",
-    });
-    setRidePopupPanel(true);
-  };
-
   const handleAcceptRide = () => {
+    if (!rideRequest?.rideId || !captainId) return;
+    sendMessage("accept-ride", { rideId: rideRequest.rideId, captainId });
     setRidePopupPanel(false);
-    alert("Ride Accepted! Redirecting to pickup navigation...");
-    navigate("/Ongoing-ride");
+    navigate("/Ongoing-ride", { state: { ride: rideRequest } });
   };
 
   const handleDeclineRide = () => {
+    if (rideRequest?.rideId && captainId) {
+      sendMessage("reject-ride", { rideId: rideRequest.rideId, captainId });
+    }
     setRidePopupPanel(false);
     setRideRequest(null);
   };
@@ -86,14 +154,6 @@ function CaptainHome() {
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Test Trigger Button for testing popup */}
-          <button
-            onClick={triggerRideRequest}
-            className="bg-black/80 hover:bg-black text-white text-xs font-semibold px-3 py-2 rounded-full backdrop-blur-md shadow-md"
-          >
-            Test Ride
-          </button>
-
           {/* Logout Button */}
           <button
             onClick={handleLogout}

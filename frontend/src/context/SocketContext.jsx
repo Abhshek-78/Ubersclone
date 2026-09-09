@@ -1,17 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import SocketContext from './socketContext';
 
 export function SocketProvider({ children }) {
   const socketRef = useRef(null);
+  const listenersRef = useRef(new Set());
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_BASE_URL , {
+    const socket = io(import.meta.env.VITE_BASE_URL || 'http://localhost:3000', {
       autoConnect: false,
     });
 
     socketRef.current = socket;
+    listenersRef.current.forEach(({ eventName, handler }) => socket.on(eventName, handler));
 
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
@@ -28,18 +30,22 @@ export function SocketProvider({ children }) {
     };
   }, []);
 
-  const sendMessage = (eventName, data) => {
+  const sendMessage = useCallback((eventName, data) => {
     socketRef.current?.emit(eventName, data);
-  };
+  }, []);
 
-  const receiveMessage = (eventName, handler) => {
+  const receiveMessage = useCallback((eventName, handler) => {
     const socket = socketRef.current;
+    const listener = { eventName, handler };
+    listenersRef.current.add(listener);
 
-    if (!socket) return () => {};
+    socket?.on(eventName, handler);
 
-    socket.on(eventName, handler);
-    return () => socket.off(eventName, handler);
-  };
+    return () => {
+      listenersRef.current.delete(listener);
+      socketRef.current?.off(eventName, handler);
+    };
+  }, []);
 
   return (
     <SocketContext.Provider value={{ isConnected, sendMessage, receiveMessage }}>

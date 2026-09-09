@@ -1,14 +1,19 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import mapimage from "../assets/map.png";
 import CaptainTopBar from "../component/CaptainTopBar";
 import RiderDetailsSidebar from "../component/RiderDetailsSidebar";
 import CancelRideModal from "../component/CancelRideModal";
 import CaptainActionPanel from "../component/CaptainActionPanel";
 import FinishRideModal from "../component/FinishRideModal";
+import { useSocket } from "../context/useSocket";
 
 function CaptainRiding() {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { sendMessage } = useSocket();
+  const ride = state?.ride;
+  const captainId = getCaptainId();
 
   // State Management
   const [isPanelExpanded, setIsPanelExpanded] = useState(true);
@@ -18,12 +23,22 @@ function CaptainRiding() {
   const [cancelReason, setCancelReason] = useState("");
   const [rideStatus, setRideStatus] = useState("waiting_otp"); // 'waiting_otp' | 'ongoing' | 'completed'
 
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState (["", "", "", ""]);
   const [errorMsg, setErrorMsg] = useState("");
 
   // Accepted Ride Data
   const acceptedRide = {
-   
+    rideId: ride?.rideId,
+    customer: {
+      name: ride?.user?.name || "Rider",
+      phone: ride?.user?.phone || "",
+    },
+    pickup: ride?.pickup || "Pickup location",
+    destination: ride?.destination || "Destination",
+    fare: ride?.fare || 0,
+    paymentMode: "Cash / UPI",
+    correctOtp: ride?.otp || "",
+    distanceRemaining: ride?.distanceToPickup || "",
   };
 
   // OTP handlers
@@ -54,6 +69,7 @@ function CaptainRiding() {
     if (enteredOtp === acceptedRide.correctOtp) {
       setErrorMsg("");
       setRideStatus("ongoing");
+      sendMessage("start-ride", { rideId: acceptedRide.rideId, captainId });
     } else {
       setErrorMsg("Invalid PIN. Please ask customer to re-check.");
     }
@@ -68,6 +84,7 @@ function CaptainRiding() {
   const handlePaymentCollected = () => {
     setShowFinishModal(false);
     setRideStatus("completed");
+    sendMessage("complete-ride", { rideId: acceptedRide.rideId, captainId });
     navigate("/captain-home");
   };
 
@@ -142,6 +159,17 @@ function CaptainRiding() {
       />
     </div>
   );
+}
+
+function getCaptainId() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    return JSON.parse(atob(token.split(".")[1]))._id;
+  } catch {
+    return null;
+  }
 }
 
 export default CaptainRiding;
