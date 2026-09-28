@@ -68,3 +68,9 @@ function getOtp(digits = 4) {
 }
 
 module.exports.getFare = getFare;
+
+module.exports.getUserRides = async (userId) => rideModel.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .populate('captain', 'fullname vehical rating')
+    .lean();

@@ -5,6 +5,8 @@ const rideModel=require('./models/ride.model')
 const mapService=require('./services/map.service')
 let io;
 const REQUEST_RADIUS_KM = Number(process.env.RIDE_REQUEST_RADIUS_KM) || 5;
+const ETA_REFRESH_MS = 15000;
+const etaCache = new Map();
 
 function initializeSocket(server) {
     io = new Server(server, {
@@ -24,20 +26,26 @@ function initializeSocket(server) {
             }
 
             if (userType === 'user') {
-                await userModel.findByIdAndUpdate(userId, {
+                const user = await userModel.findByIdAndUpdate(userId, {
                     socketId:socket.id
                 });
+                if (!user) {
+                    socket.emit('socket-error', { message: 'User account not found' });
+                    return;
+                }
             }else if(userType === 'captain'){
                 const captain = await captainModel.findByIdAndUpdate(userId, {
                     socketId:socket.id,
                     status: 'active',
                     ...(data.location ? { location: data.location } : {}),
-                }, { new: true });
+                }, { returnDocument: 'after' });
 
                 if (!captain) {
                     socket.emit('socket-error', { message: 'Captain account not found' });
                     return;
                 }
+
+                await markCaptainOnline(userId);
 
                 socket.emit('socket-joined', { userType, userId: captain._id });
             }
@@ -46,14 +54,42 @@ function initializeSocket(server) {
         socket.on('captain-location', async ({ captainId, location }) => {
             if (!captainId || !location) return;
             await captainModel.findByIdAndUpdate(captainId, { location });
+
+            const ride = await rideModel.findOne({ captain: captainId, status: { $in: ['accept', 'ongoing'] } })
+                .populate('user', 'socketId');
+            if (!ride?.user?.socketId) return;
+
+            const cached = etaCache.get(String(captainId));
+            let eta = cached?.data;
+            if (!cached || Date.now() - cached.createdAt >= ETA_REFRESH_MS) {
+                try {
+                    const route = await mapService.getTravelTimeFromCoordinates(
+                        { latitude: Number(location.ltd), longitude: Number(location.log) },
+                        ride.pickup,
+                    );
+                    eta = { etaSeconds: Math.max(0, Math.round(route.duration)), distanceMeters: Math.max(0, Math.round(route.distance)) };
+                    etaCache.set(String(captainId), { createdAt: Date.now(), data: eta });
+                } catch (error) {
+                    console.error('Unable to calculate captain ETA:', error.message);
+                }
+            }
+
+            io.to(ride.user.socketId).emit('captain-location', {
+                rideId: ride._id,
+                location,
+                ...(eta || {}),
+            });
         });
 
         socket.on('captain-status', async ({ captainId, isOnline }) => {
             if (!captainId) return;
-            await captainModel.findByIdAndUpdate(captainId, {
-                status: isOnline ? 'active' : 'inactive',
-                socketId: isOnline ? undefined : null,
-            });
+            if (isOnline) {
+                await markCaptainOnline(captainId);
+                await captainModel.findByIdAndUpdate(captainId, { status: 'active' });
+            } else {
+                await markCaptainOffline(captainId);
+                await captainModel.findByIdAndUpdate(captainId, { status: 'inactive', socketId: null });
+            }
         });
 
         socket.on('accept-ride', (data) => handleRideDecision(socket, true, data));
@@ -67,8 +103,8 @@ function initializeSocket(server) {
             console.log(`Socket disconnected: ${socket.id}`);
             captainModel.findOneAndUpdate(
                 { socketId: socket.id },
-                { status: 'inactive', socketId: null },
-            ).catch(() => {});
+                { socketId: null },
+            ).then((captain) => captain && markCaptainOffline(captain._id)).catch(() => {});
         });
 
     });
@@ -94,7 +130,7 @@ async function handleRideDecision(socket, accepted, data = {}) {
     const ride = await rideModel.findOneAndUpdate(
         { _id: rideId, status: 'pending' },
         { captain: captainId, status: 'accept' },
-        { new: true },
+        { returnDocument: 'after' },
     ).select('+otp').populate('user').populate('captain');
 
     if (!ride) {
@@ -103,25 +139,36 @@ async function handleRideDecision(socket, accepted, data = {}) {
     }
 
     await captainModel.findByIdAndUpdate(captainId, { status: 'busy' });
+    await captainModel.findByIdAndUpdate(captainId, { $inc: { requestsAccepted: 1 } });
 
     const captainDetails = {
         id: ride.captain._id,
         name: `${ride.captain.fullname.firstname} ${ride.captain.fullname.lastname || ''}`.trim(),
         email: ride.captain.email,
+        phone: ride.captain.phone || '',
         vehicle: ride.captain.vehical,
         rating: ride.captain.rating || null,
     };
 
+    const acceptedRide = {
+        rideId: ride._id,
+        pickup: ride.pickup,
+        destination: ride.destination,
+        fare: ride.fare,
+        otp: ride.otp,
+        user: {
+            id: ride.user?._id,
+            name: `${ride.user?.fullname?.firstname || ''} ${ride.user?.fullname?.lastname || ''}`.trim(),
+            email: ride.user?.email || '',
+            phone: ride.user?.phone || '',
+        },
+        captain: captainDetails,
+    };
+
     if (ride.user?.socketId) {
-        io.to(ride.user.socketId).emit('ride-accepted', {
-            rideId: ride._id,
-            pickup: ride.pickup,
-            destination: ride.destination,
-            fare: ride.fare,
-            otp: ride.otp,
-            captain: captainDetails,
-        });
+        io.to(ride.user.socketId).emit('ride-accepted', acceptedRide);
     }
+    socket.emit('ride-accepted-captain', acceptedRide);
 }
 
 async function updateRideStatus(socket, status, data = {}) {
@@ -131,7 +178,7 @@ async function updateRideStatus(socket, status, data = {}) {
     const ride = await rideModel.findOneAndUpdate(
         { _id: rideId, captain: captainId, status: status === 'ongoing' ? 'accept' : 'ongoing' },
         { status },
-        { new: true },
+        { returnDocument: 'after' },
     ).select('+otp').populate('user').populate('captain');
 
     if (!ride) {
@@ -162,20 +209,28 @@ async function dispatchRideRequest(rideId) {
     const ride = await rideModel.findById(rideId).populate('user');
     if (!ride) return [];
 
-    const pickup = await mapService.getAddressCoordinate(ride.pickup);
     const captains = await captainModel.find({
         status: 'active',
         socketId: { $nin: [null, ''] },
-        'location.ltd': { $type: 'number' },
-        'location.log': { $type: 'number' },
     }).lean();
 
+    let pickup = null;
+    try {
+        pickup = await mapService.getAddressCoordinate(ride.pickup);
+    } catch (error) {
+        // A routing outage must not prevent nearby captains from seeing the request.
+        console.error('Unable to geocode ride pickup for dispatch:', error.message);
+    }
+
+    const requestedVehicleType = normalizeVehicleType(ride.vehicleType);
     const nearbyCaptains = captains.filter((captain) => {
+        if (normalizeVehicleType(captain.vehical?.vehicaltype) !== requestedVehicleType) return false;
+
         const hasLocation = Number.isFinite(captain.location?.ltd)
             && Number.isFinite(captain.location?.log);
 
         // Keep connected captains eligible when browser location is unavailable.
-        if (!hasLocation) return true;
+        if (!pickup || !hasLocation) return true;
 
         return distanceInKm(
             pickup.latitude,
@@ -197,13 +252,14 @@ async function dispatchRideRequest(rideId) {
             id: ride.user?._id,
             name: `${ride.user?.fullname?.firstname || ''} ${ride.user?.fullname?.lastname || ''}`.trim(),
             email: ride.user?.email,
+            phone: ride.user?.phone || '',
         },
     };
 
     nearbyCaptains.forEach((captain) => {
         const hasLocation = Number.isFinite(captain.location?.ltd)
             && Number.isFinite(captain.location?.log);
-        const distanceToPickup = hasLocation
+        const distanceToPickup = pickup && hasLocation
             ? `${distanceInKm(pickup.latitude, pickup.longitude, captain.location.ltd, captain.location.log).toFixed(1)} km`
             : 'Location unavailable';
 
@@ -213,7 +269,39 @@ async function dispatchRideRequest(rideId) {
         });
     });
 
+    await captainModel.updateMany(
+        { _id: { $in: nearbyCaptains.map((captain) => captain._id) } },
+        { $inc: { requestsOffered: 1 } },
+    );
+
     return nearbyCaptains;
+}
+
+async function markCaptainOnline(captainId) {
+    const captain = await captainModel.findById(captainId).select('onlineSince');
+    if (captain && !captain.onlineSince) {
+        await captainModel.findByIdAndUpdate(captainId, { onlineSince: new Date() });
+    }
+}
+
+async function markCaptainOffline(captainId) {
+    const captain = await captainModel.findById(captainId).select('onlineSince');
+    if (!captain?.onlineSince) return;
+
+    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - captain.onlineSince.getTime()) / 1000));
+    await captainModel.findByIdAndUpdate(captainId, {
+        $inc: { totalOnlineSeconds: elapsedSeconds },
+        $unset: { onlineSince: 1 },
+    });
+}
+
+function normalizeVehicleType(vehicleType) {
+    const normalized = String(vehicleType || '').trim().toLowerCase();
+    if (normalized === 'motorcycle' || normalized === 'bike' || normalized === 'motorbike') {
+        return 'bike';
+    }
+    if (normalized === 'car' || normalized === 'auto') return normalized;
+    return '';
 }
 
 function distanceInKm(latitude1, longitude1, latitude2, longitude2) {

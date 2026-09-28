@@ -10,7 +10,7 @@ module.exports.registerUser=async (req,res,next)=>{
     }
 
     try {
-        const { fullname = req.body.fullName, email, password } = req.body;
+        const { fullname = req.body.fullName, email, phone, password } = req.body;
 
         const isuserAlredy=await usermodel.findOne({email});
         if(isuserAlredy){
@@ -21,6 +21,7 @@ module.exports.registerUser=async (req,res,next)=>{
             firstname:fullname.firstname,
             lastname:fullname.lastname,
             email,
+            phone,
             password:hashPassword
         });
         const token=user.generateAuthToken();

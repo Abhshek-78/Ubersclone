@@ -4,6 +4,7 @@ function WaitingForDriverPanel({
   driverData,
   pickup,
   destination,
+  etaText,
 }) {
   // Default fallback data template (overridden by dynamic driverData prop)
   const driver = driverData || {
@@ -33,8 +34,18 @@ function WaitingForDriverPanel({
       <div className="flex justify-between items-center border-b pb-3 mb-4">
         <div>
           <h3 className="text-lg font-bold text-gray-900">Driver is on the way</h3>
-          <p className="text-xs text-gray-500 font-medium">Arriving in 3 mins</p>
+          <p className="text-xs text-gray-500 font-medium">
+            {etaText ? `Arriving in ${etaText}` : "Waiting for captain location"}
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setWaitingForDriver(false)}
+          aria-label="Hide current ride"
+          className="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xl font-bold text-gray-800 hover:bg-gray-200"
+        >
+          ↓
+        </button>
         {/* OTP Container */}
         <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-center">
           <p className="text-[10px] text-amber-700 uppercase font-bold tracking-wider">
@@ -122,9 +133,9 @@ function WaitingForDriverPanel({
 
       {/* Action Buttons: Call & Message */}
       <div className="flex gap-3">
-        <button className="flex-1 bg-black text-white font-bold py-3 rounded-xl text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+        <a href={driver.phone ? `tel:${driver.phone}` : undefined} className="flex-1 bg-black text-white font-bold py-3 rounded-xl text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
           <span>📞</span> Call Driver
-        </button>
+        </a>
         <button className="flex-1 bg-gray-100 text-gray-800 font-bold py-3 rounded-xl text-sm hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
           <span>💬</span> Message
         </button>

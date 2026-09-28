@@ -8,6 +8,7 @@ function UserSignup() {
   const [lastname, setLastname] = useState('');
   const [email, Setemail] = useState('');
   const [password, setpassword] = useState('');
+  const [phone, setPhone] = useState('');
  
 
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ function UserSignup() {
         lastname: lastname,
       },
       email: email,
+      phone,
       password: password
     };
 
@@ -44,6 +46,7 @@ function UserSignup() {
       setLastname('');
       Setemail('');
       setpassword('');
+      setPhone('');
 
    
 
@@ -117,6 +120,14 @@ function UserSignup() {
             onChange={(e) => {
               setpassword(e.target.value);
             }}
+          />
+
+          <input
+            type="tel"
+            placeholder="Phone number"
+            className='bg-[#eeee] rounded px-4 py-4 border w-full mt-6 placeholder:text-base text-black'
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
 
           <button

@@ -44,3 +44,12 @@ module.exports.getFare=async (req,res)=>{
         return res.status(500).json({message:err.message});
     }
 }
+
+module.exports.getUserRides = async (req, res) => {
+    try {
+        const rides = await riderService.getUserRides(req.user?._id || req.user?.id);
+        return res.status(200).json(rides);
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
+    }
+};

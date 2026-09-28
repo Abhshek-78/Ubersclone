@@ -12,6 +12,7 @@ function CaptainSignup() {
   const [Lastname, SetLastname] = useState("");
   const [email, Setemail] = useState("");
   const [password, setpassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [vehicaleColor, setvehicaleColor] = useState("");
   const [vehicalePlate, setvehicalePlate] = useState("");
   const [vehicaleCapacity, setvehicaleCapacity] = useState("");
@@ -28,6 +29,7 @@ function CaptainSignup() {
         lastname: Lastname,
       },
       email,
+      phone,
       password,
       vehical: {
         color: vehicaleColor,
@@ -58,6 +60,7 @@ function CaptainSignup() {
       SetLastname("");
       Setemail("");
       setpassword("");
+      setPhone("");
       setvehicaleColor("");
       setvehicalePlate("");
       setvehicaleCapacity("");
@@ -129,6 +132,13 @@ function CaptainSignup() {
             onChange={(e) => {
               setpassword(e.target.value);
             }}
+          />
+          <input
+            type="tel"
+            placeholder="Phone number"
+            className="bg-[#eeee] rounded px-4 py-4 border w-full mt-4 placeholder:text-base text-black"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
 
           {/*  new input fom here ane ke bad ye bnana hi*/}

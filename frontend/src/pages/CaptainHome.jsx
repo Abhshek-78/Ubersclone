@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import mapimage from "../assets/map.png";
 import RidePopupPanel from "../component/RidePopupPanel";
 import { useSocket } from "../context/useSocket";
@@ -15,15 +16,41 @@ function getCaptainId() {
   }
 }
 
+function formatOnlineTime(totalOnlineSeconds, onlineSince) {
+  const activeSeconds = onlineSince
+    ? Math.max(0, Math.floor((Date.now() - new Date(onlineSince).getTime()) / 1000))
+    : 0;
+  const totalMinutes = Math.floor((Number(totalOnlineSeconds) + activeSeconds) / 60);
+  return `${Math.floor(totalMinutes / 60)}:${String(totalMinutes % 60).padStart(2, "0")}`;
+}
+
 function CaptainHome() {
   const navigate = useNavigate();
 
   const [isOnline, setIsOnline] = useState(true);
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
+  const [captainProfile, setCaptainProfile] = useState(null);
   const { sendMessage, receiveMessage, isConnected } = useSocket();
   const captainId = getCaptainId();
   const hasJoinedRef = useRef(false);
+
+  useEffect(() => {
+    if (!captainId || !isConnected) return undefined;
+
+    let cancelled = false;
+    axios.get(`${import.meta.env.VITE_BASE_URL}/captains/profile`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    }).then(({ data }) => {
+      if (!cancelled) setCaptainProfile(data.captain);
+    }).catch((error) => {
+      console.error("Unable to load captain profile:", error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [captainId, isConnected]);
 
   useEffect(() => {
     if (!captainId) return undefined;
@@ -50,9 +77,13 @@ function CaptainHome() {
       });
       setRidePopupPanel(true);
     });
+    const removeAcceptedListener = receiveMessage("ride-accepted-captain", (ride) => {
+      setRidePopupPanel(false);
+      setRideRequest(ride);
+      navigate("/Ongoing-ride", { state: { ride } });
+    });
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        ({ coords }) => join({ ltd: coords.latitude, log: coords.longitude }),
         ({ coords }) => {
           hasJoinedRef.current = true;
           join({ ltd: coords.latitude, log: coords.longitude });
@@ -61,6 +92,7 @@ function CaptainHome() {
           hasJoinedRef.current = true;
           join(undefined);
         },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
       );
     } else {
       hasJoinedRef.current = true;
@@ -84,11 +116,12 @@ function CaptainHome() {
       if (watchId !== undefined) navigator.geolocation?.clearWatch(watchId);
       hasJoinedRef.current = false;
       removeRequestListener();
+      removeAcceptedListener();
     };
-  }, [captainId, receiveMessage, sendMessage]);
+  }, [captainId, isConnected, navigate, receiveMessage, sendMessage]);
 
   useEffect(() => {
-    if (captainId) sendMessage("captain-status", { captainId, isOnline });
+    if (captainId && isConnected) sendMessage("captain-status", { captainId, isOnline });
   }, [captainId, isOnline, isConnected, sendMessage]);
 
   useEffect(() => receiveMessage("socket-error", ({ message }) => {
@@ -96,15 +129,16 @@ function CaptainHome() {
   }), [receiveMessage]);
 
   const captain = {
-    name: "Harsh Sharma",
-    photo:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRka8OSfIO41jxvfWrBFooMaesx6XulbwxE3MClQYZ0nA&s=10",
-    rating: "4.92",
-    vehicle: "Swift Dzire • UP 16 AB 4521",
-    todayEarnings: "1,845.50",
-    hoursOnline: "6.5",
-    tripsCompleted: 11,
-    acceptanceRate: "94%",
+    name: `${captainProfile?.fullname?.firstname || "Captain"} ${captainProfile?.fullname?.lastname || ""}`.trim(),
+    photo: captainProfile?.photo || "https://via.placeholder.com/150",
+    rating: captainProfile?.rating || "New",
+    vehicle: captainProfile?.vehical
+      ? `${captainProfile.vehical.vehicaltype} • ${captainProfile.vehical.plate}`
+      : "Vehicle details unavailable",
+    todayEarnings: Number(captainProfile?.totalEarnings || 0).toFixed(2),
+    hoursOnline: formatOnlineTime(captainProfile?.totalOnlineSeconds || 0, captainProfile?.onlineSince),
+    tripsCompleted: captainProfile?.completedTrips || 0,
+    acceptanceRate: `${Number(captainProfile?.acceptanceRate || 0).toFixed(1)}%`,
   };
 
   const handleLogout = () => {
@@ -115,7 +149,6 @@ function CaptainHome() {
     if (!rideRequest?.rideId || !captainId) return;
     sendMessage("accept-ride", { rideId: rideRequest.rideId, captainId });
     setRidePopupPanel(false);
-    navigate("/Ongoing-ride", { state: { ride: rideRequest } });
   };
 
   const handleDeclineRide = () => {

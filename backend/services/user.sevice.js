@@ -3,7 +3,7 @@ const usermodel=require('../models/usermodel');
 
 
 module.exports.createUser=async({
-    firstname,lastname,email,password
+    firstname,lastname,email,phone,password
 })=>{
     const normalizedEmail=(email || '').trim().toLowerCase();
 
@@ -25,6 +25,7 @@ module.exports.createUser=async({
                 lastname
             },
             email:normalizedEmail,
+            phone,
             password
         });
         return user;

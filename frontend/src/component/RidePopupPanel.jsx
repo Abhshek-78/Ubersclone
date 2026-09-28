@@ -91,6 +91,9 @@ function RidePopupPanel({
                 {ride.distanceToPickup}
               </span>
             </p>
+            {ride.user.phone && (
+              <p className="text-xs text-gray-600 mt-1">{ride.user.phone}</p>
+            )}
           </div>
         </div>
 

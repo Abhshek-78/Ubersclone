@@ -2,6 +2,7 @@ const captainModel=require('../models/captain.model');
 const captainService=require('../services/captain.sevice');
 const { validationResult } = require('express-validator');
 const blacklistModel = require('../models/blacklist.model');
+const rideModel = require('../models/ride.model');
 
 
 
@@ -12,7 +13,7 @@ module.exports.registerCaptain=async(req,res,next)=>{
     }
 
     try {
-        const { fullname, email, password, vehical } = req.body;
+        const { fullname, email, phone, password, vehical } = req.body;
         const vehicalData = vehical;
 
         if (!fullname?.firstname || !fullname?.lastname || !email || !password || !vehicalData?.color || !vehicalData?.plate || !vehicalData?.capacity || !vehicalData?.vehicaltype) {
@@ -30,6 +31,7 @@ module.exports.registerCaptain=async(req,res,next)=>{
             firstname:fullname.firstname,
             lastname:fullname.lastname,
             email,
+            phone,
             password:hashPassword,
             color:vehicalData.color,
             plate:vehicalData.plate,
@@ -69,7 +71,30 @@ module.exports.loginCaptain=async(req,res,next)=>{
 }
 
 module.exports.getCaptainProfile=async(req,res,next)=>{
-    return res.status(200).json({captain:req.captain});
+    const [completedTrips, earnings] = await Promise.all([
+        rideModel.countDocuments({ captain: req.captain._id, status: 'completed' }),
+        rideModel.aggregate([
+            { $match: { captain: req.captain._id, status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$fare' } } },
+        ]),
+    ]);
+
+    const currentOnlineSeconds = req.captain.onlineSince
+        ? Math.max(0, Math.floor((Date.now() - req.captain.onlineSince.getTime()) / 1000))
+        : 0;
+    const totalOnlineSeconds = Number(req.captain.totalOnlineSeconds || 0) + currentOnlineSeconds;
+    const requestsOffered = Number(req.captain.requestsOffered || 0);
+    const requestsAccepted = Number(req.captain.requestsAccepted || 0);
+
+    return res.status(200).json({
+        captain: {
+            ...req.captain.toObject(),
+            completedTrips,
+            totalEarnings: earnings[0]?.total || 0,
+            totalOnlineSeconds,
+            acceptanceRate: requestsOffered ? Number(((requestsAccepted / requestsOffered) * 100).toFixed(1)) : 0,
+        },
+    });
 }
 
 module.exports.logoutCaptain=async(req,res,next)=>{

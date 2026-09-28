@@ -9,6 +9,8 @@ router.get(
     mapController.getCoordinates
 );
 
+router.get('/get-address', mapController.getAddressFromCoordinates);
+
 router.get(
     '/get-distance-time',
     query('origin').isString().isLength({ min: 3 }),

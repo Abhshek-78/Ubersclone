@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const getApiKey = () => {
-    const apiKey = process.env.MAPBOX_API || process.env.MAPBOX_TOKEN || process.env.Mapbox_API;
+    const apiKey = process.env.MAPBOX_API
 
     if (!apiKey) {
         const error = new Error('MAPBOX_API is not configured');
@@ -56,6 +56,33 @@ const geocodeAddress = async (address) => {
 module.exports.getAddressCoordinate = async (address) => {
     const { latitude, longitude } = await geocodeAddress(address);
     return { latitude, longitude };
+};
+
+module.exports.getAddressFromCoordinates = async (latitude, longitude) => {
+    if (!Number.isFinite(Number(latitude)) || !Number.isFinite(Number(longitude))) {
+        const error = new Error('Valid latitude and longitude are required');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const response = await axios.get(`https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json`, {
+        params: {
+            access_token: getApiKey(),
+            limit: 1,
+            types: 'address,poi,place,locality,neighborhood',
+        },
+    });
+
+    const feature = response.data.features?.[0];
+    if (!feature) {
+        throw getMapboxApiError(response, 'Unable to find your current location');
+    }
+
+    return {
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        placeName: feature.place_name || feature.text,
+    };
 };
 
 module.exports.getDistancetime = async (origin, destination) => {
@@ -147,6 +174,29 @@ module.exports.getAutocompleteSuggestion = async (input) => {
         if (err.response) {
             throw getMapboxApiError(err.response, 'Unable to find place suggestions');
         }
+        throw err;
+    }
+};
+
+module.exports.getTravelTimeFromCoordinates = async (origin, destination) => {
+    if (!origin || !destination || !Number.isFinite(Number(origin.latitude)) || !Number.isFinite(Number(origin.longitude))) {
+        const error = new Error('Valid origin coordinates and destination are required');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const destinationCoords = await geocodeAddress(destination);
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${origin.longitude},${origin.latitude};${destinationCoords.longitude},${destinationCoords.latitude}.json`;
+
+    try {
+        const response = await axios.get(url, {
+            params: { access_token: getApiKey(), overview: 'false', steps: false },
+        });
+        const route = response.data.routes?.[0];
+        if (!route) throw getMapboxApiError(response, 'No route found');
+        return { distance: Number(route.distance) || 0, duration: Number(route.duration) || 0 };
+    } catch (err) {
+        if (err.response) throw getMapboxApiError(err.response, 'Unable to calculate ETA');
         throw err;
     }
 };

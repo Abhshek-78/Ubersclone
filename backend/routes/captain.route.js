@@ -31,6 +31,7 @@ const normalizeCaptainRequest = (req, res, next) => {
 
 router.post('/register', normalizeCaptainRequest, [
     body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Invalid email'),
+    body('phone').optional({ checkFalsy: true }).isMobilePhone().withMessage('Invalid phone number'),
     body('fullname.firstname').trim().notEmpty().withMessage('First name is required').isString().withMessage('First name must be a string'),
     body('fullname.lastname').trim().notEmpty().withMessage('Last name is required').isString().withMessage('Last name must be a string'),
     body('password').trim().notEmpty().withMessage('Password is required').isLength({ min: 4 }).withMessage('Password must be at least 4 characters'),

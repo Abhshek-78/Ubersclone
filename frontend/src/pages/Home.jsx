@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import mapimage from "../assets/map.png";
 import LocationSearchpanel from "../component/LocationSearchpanel";
 import Openbookpanel from "../component/Openbookpanel";
@@ -7,6 +7,7 @@ import LookingForDriverPanel from "../component/LookingForDriverPanel";
 import WaitingForDriverPanel from "../component/WaitingForDriverPanel";
 import axios from "axios";
 import { useSocket } from "../context/useSocket";
+import { UserDataContext } from "../context/UserContext";
 
 function getUserId() {
   const token = localStorage.getItem("token");
@@ -32,27 +33,89 @@ function Home() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [fares, setFares] = useState(null);
   const [driverData, setDriverData] = useState(null);
+  const [etaSeconds, setEtaSeconds] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [rideHistory, setRideHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [locationRequested, setLocationRequested] = useState(false);
+  const { user } = useContext(UserDataContext);
   const { sendMessage, receiveMessage, isConnected } = useSocket();
+
+  const fetchCurrentLocation = () => {
+    if (!navigator.geolocation || locationRequested || pickup.trim()) return;
+
+    setLocationRequested(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/maps/get-address`, {
+          params: { latitude: coords.latitude, longitude: coords.longitude },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setPickup(response.data.placeName || "Current location");
+      } catch {
+        setPickup("Current location");
+      }
+    }, () => {
+      setLocationRequested(false);
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  };
+
+  const loadRideHistory = async () => {
+    setHistoryLoading(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/rides/history`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setRideHistory(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      setRideHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
   
   useEffect(() => {
+    if (!isConnected) return undefined;
+
     const userId = getUserId();
     if (userId) sendMessage("join", { userType: "user", userId });
 
-    return receiveMessage("ride-accepted", (ride) => {
+    const removeAcceptedListener = receiveMessage("ride-accepted", (ride) => {
+      if (!ride?.captain) return;
+
       setDriverData({
-        name: ride.captain.name,
-        email: ride.captain.email,
-        vehicleColor: ride.captain.vehicle?.color,
-        vehicleCapacity: ride.captain.vehicle?.capacity,
-        vehicleName: ride.captain.vehicle?.vehicaltype,
-        vehicleNumber: ride.captain.vehicle?.plate,
+        rideId: ride.rideId,
+        name: ride.captain.name || "Captain",
+        email: ride.captain.email || "",
+        vehicleColor: ride.captain.vehicle?.color || "",
+        vehicleCapacity: ride.captain.vehicle?.capacity || "",
+        vehicleName: ride.captain.vehicle?.vehicaltype || "",
+        vehicleNumber: ride.captain.vehicle?.plate || "",
+        phone: ride.captain.phone || "",
         price: ride.fare,
-        otp: ride.otp,
+        otp: ride.otp || "",
         rating: ride.captain.rating || "New",
       });
+      setEtaSeconds(null);
       setLookingForDriverPanel(false);
       setWaitingForDriver(true);
     });
+
+    const removeLocationListener = receiveMessage("captain-location", (update) => {
+      if (update?.etaSeconds !== undefined) setEtaSeconds(update.etaSeconds);
+    });
+
+    const removeCompletedListener = receiveMessage("ride-completed", () => {
+      setDriverData(null);
+      setEtaSeconds(null);
+      setWaitingForDriver(false);
+    });
+
+    return () => {
+      removeAcceptedListener();
+      removeLocationListener();
+      removeCompletedListener();
+    };
   }, [isConnected, receiveMessage, sendMessage]);
 
   useEffect(() => receiveMessage("ride-rejected", () => {
@@ -107,6 +170,16 @@ function Home() {
     })
   }
 
+  useEffect(() => {
+    if (!waitingForDriver || etaSeconds === null || etaSeconds <= 0) return undefined;
+    const interval = setInterval(() => setEtaSeconds((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(interval);
+  }, [waitingForDriver, etaSeconds]);
+
+  const etaText = etaSeconds === null
+    ? null
+    : etaSeconds < 60 ? `${etaSeconds}s` : `${Math.ceil(etaSeconds / 60)} min`;
+
   return (
     <div className="h-screen relative overflow-hidden">
       {/* Background Map */}
@@ -140,10 +213,10 @@ function Home() {
             onFocus={() => {
               setActiveLocationField("pickup");
               setIsExpanded(true);
+              fetchCurrentLocation();
               setVehicalpanel(false);
               setConfirmRidePanel(false);
               setLookingForDriverPanel(false);
-              setWaitingForDriver(false);
             }}
             className="bg-[#eee] w-full px-8 text-black py-2 text-base mt-2 rounded-lg outline-none"
             type="text"
@@ -158,7 +231,6 @@ function Home() {
               setIsExpanded(true);
               setConfirmRidePanel(false);
               setLookingForDriverPanel(false);
-              setWaitingForDriver(false);
             }}
             className="bg-[#eee] w-full px-8 py-2 text-base mt-4 rounded-lg outline-none text-black"
             type="text"
@@ -192,6 +264,56 @@ function Home() {
                 }
               }}
             />
+          </div>
+        )}
+      </div>
+
+      <div className="absolute top-4 right-4 z-30">
+        <button
+          type="button"
+          onClick={() => {
+            const nextOpen = !profileOpen;
+            setProfileOpen(nextOpen);
+            if (nextOpen) loadRideHistory();
+          }}
+          className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-gray-900 shadow-lg"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
+            {(user?.fullname?.firstname || "U").charAt(0).toUpperCase()}
+          </span>
+          <span className="max-w-24 truncate">{user?.fullname?.firstname || "Profile"}</span>
+        </button>
+
+        {profileOpen && (
+          <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
+            <div className="border-b border-gray-100 pb-3">
+              <p className="font-bold text-gray-900">
+                {user?.fullname?.firstname} {user?.fullname?.lastname || ""}
+              </p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
+              {user?.phone && <p className="text-xs text-gray-500">{user.phone}</p>}
+            </div>
+            <div className="py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Current ride</p>
+              {waitingForDriver && driverData ? (
+                <p className="mt-1 text-sm font-semibold text-gray-800">With {driverData.name} • {driverData.vehicleName}</p>
+              ) : (
+                <p className="mt-1 text-sm text-gray-500">No active ride</p>
+              )}
+            </div>
+            <div className="border-t border-gray-100 pt-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-400">Ride history</p>
+              {historyLoading && <p className="mt-2 text-sm text-gray-500">Loading rides...</p>}
+              {!historyLoading && rideHistory.length === 0 && <p className="mt-2 text-sm text-gray-500">No rides yet</p>}
+              <div className="mt-2 max-h-40 space-y-2 overflow-y-auto">
+                {rideHistory.map((ride) => (
+                  <div key={ride._id} className="rounded-lg bg-gray-50 p-2 text-xs">
+                    <p className="font-semibold text-gray-800">{ride.pickup} to {ride.destination}</p>
+                    <p className="mt-1 text-gray-500">{ride.vehicleType} • ₹{ride.fare} • {ride.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -235,7 +357,20 @@ function Home() {
         driverData={driverData}
         pickup={pickup}
         destination={destination}
+        etaText={etaText}
       />
+
+      {driverData && !waitingForDriver && (
+        <button
+          type="button"
+          onClick={() => setWaitingForDriver(true)}
+          aria-label="Open active ride"
+          className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-xl"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-black">↑</span>
+          <span>Active ride{etaText ? ` · ${etaText}` : ""}</span>
+        </button>
+      )}
     </div>
   );
 }

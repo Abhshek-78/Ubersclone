@@ -28,4 +28,6 @@ router.get('/getFare',
     rideController.getFare
 )
 
+router.get('/history', authMiddleware.authUser, rideController.getUserRides);
+
 module.exports = router;

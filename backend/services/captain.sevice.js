@@ -3,7 +3,7 @@ const captainModel=require('../models/captain.model');
 
 
 module.exports.createCaptain=async({
-    firstname,lastname,email,password,color,plate,capacity,vehicaltype
+    firstname,lastname,email,phone,password,color,plate,capacity,vehicaltype
 })=>{
     if(!firstname || !lastname || !email || !password || !color || !plate || !capacity  || !vehicaltype){
         throw new Error('all fiend are require ');
@@ -15,6 +15,7 @@ module.exports.createCaptain=async({
             lastname,
         },
         email,
+        phone,
         password,
         vehical: {
             color,

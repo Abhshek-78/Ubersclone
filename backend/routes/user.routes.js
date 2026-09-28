@@ -26,6 +26,7 @@ router.post('/register', normalizeUserRequest, [
     body('email').trim().notEmpty().withMessage('email is required').isEmail().withMessage('invalid mail'),
     body('fullname.firstname').trim().notEmpty().withMessage('first name is required').isLength({min:3}).withMessage('first name length must be > than 3 character'),
     body('password').trim().notEmpty().withMessage('password is required').isLength({min:6}).withMessage("password must be > than 6 character"),
+    body('phone').optional({ checkFalsy: true }).isMobilePhone().withMessage('invalid phone number'),
 ],
 userController.registerUser
 )

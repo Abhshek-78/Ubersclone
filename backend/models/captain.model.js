@@ -19,6 +19,10 @@ const captainSchema = new mongoose.Schema({
         unique: true,
         lowercase: true,
     },
+    phone: {
+        type: String,
+        trim: true,
+    },
     password: {
         type: String,
         required: true,
@@ -61,7 +65,11 @@ const captainSchema = new mongoose.Schema({
         log: {
             type: Number
         }
-    }
+    },
+    totalOnlineSeconds: { type: Number, default: 0 },
+    onlineSince: { type: Date },
+    requestsOffered: { type: Number, default: 0 },
+    requestsAccepted: { type: Number, default: 0 },
 });
 
 captainSchema.methods.generateAuthToken = function () {
