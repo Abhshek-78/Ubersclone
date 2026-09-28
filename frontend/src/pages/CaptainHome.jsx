@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import mapimage from "../assets/map.png";
 import RidePopupPanel from "../component/RidePopupPanel";
 import { useSocket } from "../context/useSocket";
+import LiveMap from "../component/LiveMap";
 
 function getCaptainId() {
   const token = localStorage.getItem("token");
@@ -31,6 +31,7 @@ function CaptainHome() {
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
   const [rideRequest, setRideRequest] = useState(null);
   const [captainProfile, setCaptainProfile] = useState(null);
+  const [captainLocation, setCaptainLocation] = useState(null);
   const { sendMessage, receiveMessage, isConnected } = useSocket();
   const captainId = getCaptainId();
   const hasJoinedRef = useRef(false);
@@ -85,8 +86,10 @@ function CaptainHome() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         ({ coords }) => {
+            const location = { ltd: coords.latitude, log: coords.longitude };
+            setCaptainLocation(location);
           hasJoinedRef.current = true;
-          join({ ltd: coords.latitude, log: coords.longitude });
+            join(location);
         },
         () => {
           hasJoinedRef.current = true;
@@ -102,6 +105,7 @@ function CaptainHome() {
     const watchId = navigator.geolocation?.watchPosition(
       ({ coords }) => {
         const location = { ltd: coords.latitude, log: coords.longitude };
+        setCaptainLocation(location);
         if (!hasJoinedRef.current) {
           hasJoinedRef.current = true;
           join(location);
@@ -161,11 +165,9 @@ function CaptainHome() {
 
   return (
     <div className="h-screen w-full relative overflow-hidden bg-gray-100 ">
-      {/* Background Map View */}
-      <div
-        className="h-dvh w-full bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${mapimage})` }}
-      />
+      <div className="h-dvh w-full">
+        <LiveMap captainLocation={captainLocation} vehicleType={captainProfile?.vehical?.vehicaltype} />
+      </div>
 
       {/* Top Floating Header: Status Toggle & Logout */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-center max-w-md mx-auto">

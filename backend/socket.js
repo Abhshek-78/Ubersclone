@@ -57,28 +57,39 @@ function initializeSocket(server) {
 
             const ride = await rideModel.findOne({ captain: captainId, status: { $in: ['accept', 'ongoing'] } })
                 .populate('user', 'socketId');
-            if (!ride?.user?.socketId) return;
+            if (!ride) return;
+
+            const phase = ride.status === 'ongoing' ? 'ongoing' : 'pickup';
+            const target = phase === 'ongoing' ? ride.destination : ride.pickup;
 
             const cached = etaCache.get(String(captainId));
             let eta = cached?.data;
-            if (!cached || Date.now() - cached.createdAt >= ETA_REFRESH_MS) {
+            if (!cached || cached.phase !== phase || Date.now() - cached.createdAt >= ETA_REFRESH_MS) {
                 try {
-                    const route = await mapService.getTravelTimeFromCoordinates(
+                    const route = await mapService.getLiveRouteFromCoordinates(
                         { latitude: Number(location.ltd), longitude: Number(location.log) },
-                        ride.pickup,
+                        target,
                     );
-                    eta = { etaSeconds: Math.max(0, Math.round(route.duration)), distanceMeters: Math.max(0, Math.round(route.distance)) };
-                    etaCache.set(String(captainId), { createdAt: Date.now(), data: eta });
+                    eta = {
+                        etaSeconds: Math.max(0, Math.round(route.duration)),
+                        distanceMeters: Math.max(0, Math.round(route.distance)),
+                        route: route.geometry,
+                        destinationLocation: route.destination,
+                    };
+                    etaCache.set(String(captainId), { createdAt: Date.now(), data: eta, phase });
                 } catch (error) {
                     console.error('Unable to calculate captain ETA:', error.message);
                 }
             }
 
-            io.to(ride.user.socketId).emit('captain-location', {
+            const update = {
                 rideId: ride._id,
                 location,
+                phase,
                 ...(eta || {}),
-            });
+            };
+            socket.emit('captain-location', update);
+            if (ride.user?.socketId) io.to(ride.user.socketId).emit('captain-location', update);
         });
 
         socket.on('captain-status', async ({ captainId, isOnline }) => {

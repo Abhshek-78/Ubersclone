@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import mapimage from "../assets/map.png";
 import CaptainTopBar from "../component/CaptainTopBar";
 import RiderDetailsSidebar from "../component/RiderDetailsSidebar";
 import CancelRideModal from "../component/CancelRideModal";
 import CaptainActionPanel from "../component/CaptainActionPanel";
 import FinishRideModal from "../component/FinishRideModal";
 import { useSocket } from "../context/useSocket";
+import LiveMap from "../component/LiveMap";
 
 function CaptainRiding() {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { sendMessage } = useSocket();
+  const { sendMessage, receiveMessage } = useSocket();
   const ride = state?.ride;
   const captainId = getCaptainId();
 
@@ -25,6 +25,9 @@ function CaptainRiding() {
 
   const [otp, setOtp] = useState (["", "", "", ""]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [captainLocation, setCaptainLocation] = useState(null);
+  const [route, setRoute] = useState(null);
+  const [ridePhase, setRidePhase] = useState("pickup");
 
   // Accepted Ride Data
   const acceptedRide = {
@@ -39,7 +42,33 @@ function CaptainRiding() {
     paymentMode: "Cash / UPI",
     correctOtp: ride?.otp || "",
     distanceRemaining: ride?.distanceToPickup || "",
+    vehicleType: ride?.vehicleType || ride?.captain?.vehicle?.vehicaltype || "car",
   };
+
+  useEffect(() => {
+    if (!captainId) return undefined;
+
+    const removeLocationListener = receiveMessage("captain-location", (update) => {
+      if (update?.location) setCaptainLocation(update.location);
+      if (update?.route) setRoute(update.route);
+      if (update?.phase) setRidePhase(update.phase);
+    });
+
+    const watchId = navigator.geolocation?.watchPosition(
+      ({ coords }) => {
+        const location = { ltd: coords.latitude, log: coords.longitude };
+        setCaptainLocation(location);
+        sendMessage("captain-location", { captainId, location });
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+    );
+
+    return () => {
+      if (watchId !== undefined) navigator.geolocation?.clearWatch(watchId);
+      removeLocationListener();
+    };
+  }, [captainId, receiveMessage, sendMessage]);
 
   // OTP handlers
   const handleOtpChange = (value, index) => {
@@ -69,6 +98,7 @@ function CaptainRiding() {
     if (enteredOtp === acceptedRide.correctOtp) {
       setErrorMsg("");
       setRideStatus("ongoing");
+      setRidePhase("ongoing");
       sendMessage("start-ride", { rideId: acceptedRide.rideId, captainId });
     } else {
       setErrorMsg("Invalid PIN. Please ask customer to re-check.");
@@ -101,12 +131,15 @@ function CaptainRiding() {
 
   return (
     <div className="h-screen w-full relative overflow-hidden bg-gray-100 font-sans">
-      {/* Background Map View */}
-      <div
-        className="h-dvh w-full bg-cover bg-center bg-no-repeat cursor-pointer"
-        style={{ backgroundImage: `url(${mapimage})` }}
-        onClick={() => setIsPanelExpanded(false)}
-      />
+      <div className="h-dvh w-full">
+        <LiveMap
+          pickup={acceptedRide.pickup}
+          destination={acceptedRide.destination}
+          captainLocation={captainLocation}
+          route={route}
+          vehicleType={acceptedRide.vehicleType}
+        />
+      </div>
 
       {/* Top Floating Navigation Header */}
       <CaptainTopBar

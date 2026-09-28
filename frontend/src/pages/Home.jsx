@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from "react";
-import mapimage from "../assets/map.png";
 import LocationSearchpanel from "../component/LocationSearchpanel";
 import Openbookpanel from "../component/Openbookpanel";
 import ConfirmRidePanel from "../component/Confirmridepanel";
@@ -8,6 +7,7 @@ import WaitingForDriverPanel from "../component/WaitingForDriverPanel";
 import axios from "axios";
 import { useSocket } from "../context/useSocket";
 import { UserDataContext } from "../context/UserContext";
+import LiveMap from "../component/LiveMap";
 
 function getUserId() {
   const token = localStorage.getItem("token");
@@ -34,6 +34,9 @@ function Home() {
   const [fares, setFares] = useState(null);
   const [driverData, setDriverData] = useState(null);
   const [etaSeconds, setEtaSeconds] = useState(null);
+  const [captainLocation, setCaptainLocation] = useState(null);
+  const [route, setRoute] = useState(null);
+  const [ridePhase, setRidePhase] = useState("pickup");
   const [profileOpen, setProfileOpen] = useState(false);
   const [rideHistory, setRideHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -91,23 +94,32 @@ function Home() {
         vehicleCapacity: ride.captain.vehicle?.capacity || "",
         vehicleName: ride.captain.vehicle?.vehicaltype || "",
         vehicleNumber: ride.captain.vehicle?.plate || "",
+        vehicleType: ride.captain.vehicle?.vehicaltype || "car",
         phone: ride.captain.phone || "",
         price: ride.fare,
         otp: ride.otp || "",
         rating: ride.captain.rating || "New",
       });
       setEtaSeconds(null);
+      setCaptainLocation(null);
+      setRoute(null);
+      setRidePhase("pickup");
       setLookingForDriverPanel(false);
       setWaitingForDriver(true);
     });
 
     const removeLocationListener = receiveMessage("captain-location", (update) => {
+      if (update?.location) setCaptainLocation(update.location);
+      if (update?.route) setRoute(update.route);
+      if (update?.phase) setRidePhase(update.phase);
       if (update?.etaSeconds !== undefined) setEtaSeconds(update.etaSeconds);
     });
 
     const removeCompletedListener = receiveMessage("ride-completed", () => {
       setDriverData(null);
       setEtaSeconds(null);
+      setCaptainLocation(null);
+      setRoute(null);
       setWaitingForDriver(false);
     });
 
@@ -182,11 +194,15 @@ function Home() {
 
   return (
     <div className="h-screen relative overflow-hidden">
-      {/* Background Map */}
-      <div
-        className="h-dvh w-full bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${mapimage})` }}
-      />
+      <div className="h-dvh w-full">
+        <LiveMap
+          pickup={pickup}
+          destination={destination}
+          captainLocation={captainLocation}
+          route={route}
+          vehicleType={driverData?.vehicleType || selectedVehicle?.vehicleType || "car"}
+        />
+      </div>
 
       {/* Main Search Panel */}
       <div
@@ -358,6 +374,7 @@ function Home() {
         pickup={pickup}
         destination={destination}
         etaText={etaText}
+        ridePhase={ridePhase}
       />
 
       {driverData && !waitingForDriver && (

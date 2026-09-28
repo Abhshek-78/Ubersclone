@@ -200,3 +200,31 @@ module.exports.getTravelTimeFromCoordinates = async (origin, destination) => {
         throw err;
     }
 };
+
+module.exports.getLiveRouteFromCoordinates = async (origin, destination) => {
+    if (!origin || !destination || !Number.isFinite(Number(origin.latitude)) || !Number.isFinite(Number(origin.longitude))) {
+        const error = new Error('Valid origin coordinates and destination are required');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const destinationCoords = await geocodeAddress(destination);
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${origin.longitude},${origin.latitude};${destinationCoords.longitude},${destinationCoords.latitude}.json`;
+
+    try {
+        const response = await axios.get(url, {
+            params: { access_token: getApiKey(), geometries: 'geojson', overview: 'full', steps: false },
+        });
+        const route = response.data.routes?.[0];
+        if (!route?.geometry) throw getMapboxApiError(response, 'No route found');
+        return {
+            geometry: route.geometry,
+            distance: Number(route.distance) || 0,
+            duration: Number(route.duration) || 0,
+            destination: destinationCoords,
+        };
+    } catch (err) {
+        if (err.response) throw getMapboxApiError(err.response, 'Unable to calculate live route');
+        throw err;
+    }
+};
