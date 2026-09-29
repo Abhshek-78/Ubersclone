@@ -8,6 +8,8 @@ import axios from "axios";
 import { useSocket } from "../context/useSocket";
 import { UserDataContext } from "../context/UserContext";
 import LiveMap from "../component/LiveMap";
+import ProfileAvatarUploader from "../component/ProfileAvatarUploader";
+import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 function getUserId() {
   const token = localStorage.getItem("token");
@@ -41,7 +43,7 @@ function Home() {
   const [rideHistory, setRideHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [locationRequested, setLocationRequested] = useState(false);
-  const { user } = useContext(UserDataContext);
+  const { user, setUser } = useContext(UserDataContext);
   const { sendMessage, receiveMessage, isConnected } = useSocket();
 
   const fetchCurrentLocation = () => {
@@ -101,8 +103,8 @@ function Home() {
         rating: ride.captain.rating || "New",
       });
       setEtaSeconds(null);
-      setCaptainLocation(null);
-      setRoute(null);
+      setCaptainLocation(ride.captain.location || null);
+      setRoute(ride.route || null);
       setRidePhase("pickup");
       setLookingForDriverPanel(false);
       setWaitingForDriver(true);
@@ -123,10 +125,20 @@ function Home() {
       setWaitingForDriver(false);
     });
 
+    const removeCancelledListener = receiveMessage("ride-cancelled", () => {
+      setDriverData(null);
+      setEtaSeconds(null);
+      setCaptainLocation(null);
+      setRoute(null);
+      setRidePhase("pickup");
+      setWaitingForDriver(false);
+    });
+
     return () => {
       removeAcceptedListener();
       removeLocationListener();
       removeCompletedListener();
+      removeCancelledListener();
     };
   }, [isConnected, receiveMessage, sendMessage]);
 
@@ -182,6 +194,18 @@ function Home() {
     })
   }
 
+  const handleCancelRide = () => {
+    if (!driverData?.rideId || !window.confirm("Are you sure you want to cancel this ride?")) return;
+
+    sendMessage("cancel-ride", { rideId: driverData.rideId, userId: getUserId() });
+    setDriverData(null);
+    setEtaSeconds(null);
+    setCaptainLocation(null);
+    setRoute(null);
+    setRidePhase("pickup");
+    setWaitingForDriver(false);
+  };
+
   useEffect(() => {
     if (!waitingForDriver || etaSeconds === null || etaSeconds <= 0) return undefined;
     const interval = setInterval(() => setEtaSeconds((seconds) => Math.max(0, seconds - 1)), 1000);
@@ -201,6 +225,7 @@ function Home() {
           captainLocation={captainLocation}
           route={route}
           vehicleType={driverData?.vehicleType || selectedVehicle?.vehicleType || "car"}
+          followCaptain={ridePhase === "pickup"}
         />
       </div>
 
@@ -217,7 +242,7 @@ function Home() {
               onClick={() => setIsExpanded(false)}
               className="text-black font-bold text-xl px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
             >
-              ↓
+              <FaArrowDown aria-hidden="true" className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -285,20 +310,26 @@ function Home() {
       </div>
 
       <div className="absolute top-4 right-4 z-30">
-        <button
-          type="button"
-          onClick={() => {
-            const nextOpen = !profileOpen;
-            setProfileOpen(nextOpen);
-            if (nextOpen) loadRideHistory();
-          }}
-          className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-gray-900 shadow-lg"
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
-            {(user?.fullname?.firstname || "U").charAt(0).toUpperCase()}
-          </span>
-          <span className="max-w-24 truncate">{user?.fullname?.firstname || "Profile"}</span>
-        </button>
+        <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-gray-900 shadow-lg">
+          <ProfileAvatarUploader
+            photo={user?.photo}
+            name={user?.fullname?.firstname || "Profile"}
+            uploadPath="/users/profile/photo"
+            onUploaded={(photo) => setUser((currentUser) => ({ ...currentUser, photo }))}
+            className="h-8 w-8"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const nextOpen = !profileOpen;
+              setProfileOpen(nextOpen);
+              if (nextOpen) loadRideHistory();
+            }}
+            className="max-w-24 truncate"
+          >
+            {user?.fullname?.firstname || "Profile"}
+          </button>
+        </div>
 
         {profileOpen && (
           <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
@@ -375,6 +406,7 @@ function Home() {
         destination={destination}
         etaText={etaText}
         ridePhase={ridePhase}
+        onCancelRide={handleCancelRide}
       />
 
       {driverData && !waitingForDriver && (
@@ -384,7 +416,7 @@ function Home() {
           aria-label="Open active ride"
           className="fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-xl"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-black">↑</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-black"><FaArrowUp aria-hidden="true" className="h-3.5 w-3.5" /></span>
           <span>Active ride{etaText ? ` · ${etaText}` : ""}</span>
         </button>
       )}

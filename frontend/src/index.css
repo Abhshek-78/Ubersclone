@@ -57,6 +57,68 @@ body {
   margin: 0;
 }
 
+.live-map-marker {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  user-select: none;
+}
+
+.live-map-marker-captain {
+  height: 54px;
+  width: 36px;
+  z-index: 2;
+}
+
+.live-map-marker-vehicle {
+  display: block;
+  height: 52px;
+  transform-origin: center;
+  transition: transform 280ms ease-out;
+  width: 32px;
+  will-change: transform;
+}
+
+.live-map-marker-vehicle svg {
+  display: block;
+  height: 100%;
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+  overflow: visible;
+  width: 100%;
+}
+
+.live-map-marker-vehicle svg > path:first-child {
+  fill: #111827;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.live-map-marker-window {
+  fill: #60a5fa;
+  stroke: #dbeafe;
+  stroke-width: 0.8;
+}
+
+.live-map-marker-light {
+  fill: #fbbf24;
+}
+
+.live-map-marker-vehicle svg > circle {
+  fill: #374151;
+}
+
+.live-map-marker-pickup,
+.live-map-marker-destination {
+  border: 3px solid #fff;
+  
+  color: #fff;
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+
+
 #root {
   width: 1126px;
   max-width: 100%;

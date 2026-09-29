@@ -1,4 +1,5 @@
 import React from "react";
+import { FaCommentDots, FaMapMarkerAlt, FaPhone, FaStar, FaTimes } from "react-icons/fa";
 
 function RiderDetailsSidebar({
   isOpen,
@@ -33,7 +34,7 @@ function RiderDetailsSidebar({
               onClick={onClose}
               className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm hover:bg-gray-200"
             >
-              ✕
+              <FaTimes aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
 
@@ -46,7 +47,7 @@ function RiderDetailsSidebar({
                 className="w-14 h-14 rounded-full object-cover border-2 border-black"
               />
               <span className="absolute -bottom-1 -right-1 bg-black text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                ★ {customer.rating}
+                <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {customer.rating}
               </span>
             </div>
             <div className="flex-1">
@@ -91,20 +92,20 @@ function RiderDetailsSidebar({
               href={`tel:${customer.phone}`}
               className="bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
             >
-              <span>📞</span> Call
+              <FaPhone aria-hidden="true" className="h-3.5 w-3.5" /> Call
             </a>
             <button
               onClick={() => alert("Opening chat...")}
               className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             >
-              <span>💬</span> Message
+              <FaCommentDots aria-hidden="true" className="h-3.5 w-3.5" /> Message
             </button>
           </div>
 
           {/* Location Path */}
           <div className="space-y-3 bg-gray-50 p-3.5 rounded-2xl border border-gray-100 mb-6">
             <div className="flex items-start gap-2.5">
-              <div className="w-3 h-3 bg-emerald-600 rounded-full mt-1 shrink-0" />
+              <FaMapMarkerAlt aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
               <div>
                 <p className="text-[10px] text-gray-400 font-bold uppercase">
                   Pickup
@@ -116,7 +117,7 @@ function RiderDetailsSidebar({
             <div className="border-l-2 border-dashed border-gray-300 ml-1.5 h-3" />
 
             <div className="flex items-start gap-2.5">
-              <div className="w-3 h-3 bg-rose-600 rounded-sm mt-1 shrink-0" />
+              <FaMapMarkerAlt aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-600" />
               <div>
                 <p className="text-[10px] text-gray-400 font-bold uppercase">
                   Drop ({tripDistance})

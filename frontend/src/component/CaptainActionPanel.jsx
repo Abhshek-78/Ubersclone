@@ -1,4 +1,6 @@
 import React from "react";
+import { FaArrowDown, FaArrowUp, FaCommentDots, FaPhone, FaFlagCheckered } from "react-icons/fa";
+
 
 function CaptainActionPanel({
   isExpanded,
@@ -27,7 +29,8 @@ function CaptainActionPanel({
       >
         <div className="w-12 h-1 bg-gray-300 rounded-full group-hover:bg-gray-400 transition-colors" />
         <button className="text-gray-500 text-xs font-bold mt-1.5 flex items-center gap-1">
-          <span>{isExpanded ? "↓ Tap to hide" : "↑ View Ride Controls"}</span>
+          {isExpanded ? <FaArrowDown aria-hidden="true" className="h-3 w-3" /> : <FaArrowUp aria-hidden="true" className="h-3 w-3" />}
+          <span>{isExpanded ? "Tap to hide" : "View Ride Controls"}</span>
         </button>
       </div>
 
@@ -71,13 +74,13 @@ function CaptainActionPanel({
               href={`tel:${customer.phone}`}
               className="w-9 h-9 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-100"
             >
-              📞
+              <FaPhone aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </a>
             <button
               onClick={() => alert("Opening Chat")}
               className="w-9 h-9 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-100"
             >
-              💬
+              <FaCommentDots aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>
@@ -135,7 +138,7 @@ function CaptainActionPanel({
               onClick={onFinishTrip}
               className="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-4 rounded-2xl text-base shadow-lg shadow-rose-600/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
-              <span>🏁</span> Stop / Complete Ride
+              <FaFlagCheckered aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" /> Stop / Complete Ride
             </button>
           </div>
         )}

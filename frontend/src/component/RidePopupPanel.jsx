@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaMapMarkerAlt, FaStar } from "react-icons/fa";
 
 function RidePopupPanel({
   rideRequest,
@@ -77,7 +78,7 @@ function RidePopupPanel({
               className="w-11 h-11 rounded-full object-cover border-2 border-black"
             />
             <span className="absolute -bottom-1 -right-1 bg-black text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
-              ★ {ride.user.rating}
+              <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {ride.user.rating}
             </span>
           </div>
 
@@ -112,7 +113,7 @@ function RidePopupPanel({
         {/* Pickup */}
         <div className="flex items-start gap-3">
           <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-            <div className="w-2.5 h-2.5 bg-emerald-600 rounded-full" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" />
           </div>
           <div className="flex-1">
             <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
@@ -130,7 +131,7 @@ function RidePopupPanel({
         {/* Drop Destination */}
         <div className="flex items-start gap-3">
           <div className="w-6 h-6 rounded-full bg-rose-100 flex items-center justify-center shrink-0 mt-0.5">
-            <div className="w-2.5 h-2.5 bg-rose-600 rounded-sm" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-rose-600" />
           </div>
           <div className="flex-1">
             <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">

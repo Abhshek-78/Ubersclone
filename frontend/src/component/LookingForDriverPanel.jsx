@@ -1,4 +1,5 @@
 import React from 'react'
+import { FaMapMarkerAlt, FaTimes } from "react-icons/fa";
 
 function LookingForDriverPanel({
   lookingForDriverPanel,
@@ -22,7 +23,7 @@ function LookingForDriverPanel({
           onClick={() => setLookingForDriverPanel(false)}
           className="text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full text-sm font-bold"
         >
-          ✕
+          <FaTimes aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
 
@@ -58,7 +59,7 @@ function LookingForDriverPanel({
         {/* Pickup Location */}
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <div className="w-2.5 h-2.5 bg-emerald-600 rounded-full" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" />
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-semibold">
@@ -73,7 +74,7 @@ function LookingForDriverPanel({
         {/* Destination Location */}
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-            <div className="w-2.5 h-2.5 bg-rose-600 rounded-sm" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-rose-600" />
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-semibold">

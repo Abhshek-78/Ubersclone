@@ -1,4 +1,5 @@
 import React from "react";
+import { FaCheck } from "react-icons/fa";
 
 function FinishRideModal({
   isOpen,
@@ -14,19 +15,7 @@ function FinishRideModal({
       <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl border border-gray-100 text-center animate-in fade-in zoom-in-95 duration-200">
         {/* Animated Green Checkmark Badge */}
         <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-emerald-50">
-          <svg
-            className="w-10 h-10 text-emerald-600"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4.5 12.75l6 6 9-13.5"
-            />
-          </svg>
+          <FaCheck aria-hidden="true" className="h-8 w-8 text-emerald-600 sm:h-10 sm:w-10" />
         </div>
 
         {/* Success Header */}

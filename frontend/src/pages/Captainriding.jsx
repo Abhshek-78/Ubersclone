@@ -25,8 +25,8 @@ function CaptainRiding() {
 
   const [otp, setOtp] = useState (["", "", "", ""]);
   const [errorMsg, setErrorMsg] = useState("");
-  const [captainLocation, setCaptainLocation] = useState(null);
-  const [route, setRoute] = useState(null);
+  const [captainLocation, setCaptainLocation] = useState(ride?.captain?.location || null);
+  const [route, setRoute] = useState(ride?.route || null);
   const [ridePhase, setRidePhase] = useState("pickup");
 
   // Accepted Ride Data
@@ -54,6 +54,10 @@ function CaptainRiding() {
       if (update?.phase) setRidePhase(update.phase);
     });
 
+    const removeCancellationListener = receiveMessage("ride-cancelled", () => {
+      navigate("/captain-home", { replace: true });
+    });
+
     const watchId = navigator.geolocation?.watchPosition(
       ({ coords }) => {
         const location = { ltd: coords.latitude, log: coords.longitude };
@@ -67,8 +71,9 @@ function CaptainRiding() {
     return () => {
       if (watchId !== undefined) navigator.geolocation?.clearWatch(watchId);
       removeLocationListener();
+      removeCancellationListener();
     };
-  }, [captainId, receiveMessage, sendMessage]);
+  }, [captainId, navigate, receiveMessage, sendMessage]);
 
   // OTP handlers
   const handleOtpChange = (value, index) => {
@@ -138,6 +143,7 @@ function CaptainRiding() {
           captainLocation={captainLocation}
           route={route}
           vehicleType={acceptedRide.vehicleType}
+          followCaptain={ridePhase === "pickup"}
         />
       </div>
 

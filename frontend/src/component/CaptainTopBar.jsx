@@ -1,4 +1,5 @@
 import React from "react";
+import { FaUser } from "react-icons/fa";
 
 function CaptainTopBar({
   customer,
@@ -12,11 +13,7 @@ function CaptainTopBar({
         onClick={onOpenSidebar}
         className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-full flex items-center gap-2.5 shadow-lg border border-gray-100 text-gray-900 font-bold text-sm hover:bg-gray-50 active:scale-95 transition-all"
       >
-        <img
-          src={customer.photo}
-          alt={customer.name}
-          className="w-7 h-7 rounded-full object-cover border-2 border-black"
-        />
+        {customer.photo ? <img src={customer.photo} alt={customer.name} className="h-7 w-7 rounded-full object-cover border-2 border-black" /> : <FaUser aria-hidden="true" className="h-5 w-5" />}
         <span>Customer</span>
       </button>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaCar, FaMotorcycle, FaTaxi, FaUserFriends } from "react-icons/fa";
 
 function Openbookpanel({
   vehicalpanel,
@@ -14,6 +15,7 @@ function Openbookpanel({
       capacity: 4,
       description: "Affordable, compact rides",
       vehicleType: "car",
+      icon: FaCar,
       image:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQCJRWXqN_BI1o00GppW5TLYY-2NLGpFsVAg3rOs4hlw&s=10",
     },
@@ -23,7 +25,7 @@ function Openbookpanel({
       capacity: 1,
       description: "Affordable motorcycle rides",
       vehicleType: "motorcycle",
-      image: "https://cdn-icons-png.flaticon.com/128/11432/11432322.png",
+      icon: FaMotorcycle,
     },
     {
       id: "uberAuto",
@@ -31,6 +33,7 @@ function Openbookpanel({
       capacity: 3,
       description: "No haggling, doorstep pickup",
       vehicleType: "auto",
+      icon: FaTaxi,
       image:
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE_JyrWPd8oITTsdiEBAW9cmhLBcCU-GpR1Y6YXqfs2A&s=10",
     },
@@ -81,7 +84,7 @@ function Openbookpanel({
                   {ride.name}
                 </span>
                 <span className="text-xs text-gray-600 flex items-center">
-                  👤 {ride.capacity}
+                  <FaUserFriends aria-hidden="true" className="mr-1 h-3 w-3" /> {ride.capacity}
                 </span>
               </div>
               <div className="text-xs text-gray-500">{ride.description}</div>

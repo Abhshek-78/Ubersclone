@@ -4,6 +4,8 @@ import axios from "axios";
 import RidePopupPanel from "../component/RidePopupPanel";
 import { useSocket } from "../context/useSocket";
 import LiveMap from "../component/LiveMap";
+import ProfileAvatarUploader from "../component/ProfileAvatarUploader";
+import { FaChartLine, FaClock, FaSignOutAlt, FaStar, FaRoute } from "react-icons/fa";
 
 function getCaptainId() {
   const token = localStorage.getItem("token");
@@ -134,7 +136,7 @@ function CaptainHome() {
 
   const captain = {
     name: `${captainProfile?.fullname?.firstname || "Captain"} ${captainProfile?.fullname?.lastname || ""}`.trim(),
-    photo: captainProfile?.photo || "https://via.placeholder.com/150",
+    photo: captainProfile?.photo || "",
     rating: captainProfile?.rating || "New",
     vehicle: captainProfile?.vehical
       ? `${captainProfile.vehical.vehicaltype} • ${captainProfile.vehical.plate}`
@@ -195,20 +197,7 @@ function CaptainHome() {
             title="Log out"
             className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-md text-gray-700 hover:text-rose-600 hover:bg-rose-50 transition-all active:scale-95 border border-gray-100"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"
-              />
-            </svg>
+            <FaSignOutAlt aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
       </div>
@@ -222,13 +211,15 @@ function CaptainHome() {
         <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <img
-                src={captain.photo}
-                alt={captain.name}
-                className="w-14 h-14 rounded-full object-cover border-2 border-black"
+              <ProfileAvatarUploader
+                photo={captain.photo}
+                name={captain.name}
+                uploadPath="/captains/profile/photo"
+                onUploaded={(photo) => setCaptainProfile((currentProfile) => ({ ...currentProfile, photo }))}
+                className="h-14 w-14 rounded-full border-2 border-black"
               />
               <span className="absolute -bottom-1 -right-1 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
-                ★ {captain.rating}
+                <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {captain.rating}
               </span>
             </div>
 
@@ -257,11 +248,7 @@ function CaptainHome() {
           {/* Hours Online */}
           <div className="text-center bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
             <div className="text-base mb-0.5 align-bottom">
-              <img
-                src="https://cdn-icons-png.flaticon.com/128/11138/11138644.png"
-                className="h-8 ml-4 w-8 align"
-                alt="online hours"
-              />
+              <FaClock aria-hidden="true" className="mx-auto h-6 w-6 text-slate-700 sm:h-8 sm:w-8" />
             </div>
             <h4 className="text-base font-bold text-gray-900">
               {captain.hoursOnline}{" "}
@@ -275,11 +262,7 @@ function CaptainHome() {
           {/* Trips Completed */}
           <div className="text-center bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
             <div className="text-base mb-0.5">
-              <img
-                src="https://cdn-icons-png.flaticon.com/128/7571/7571054.png"
-                alt="trips"
-                className="h-8 ml-4 w-8 align"
-              />
+              <FaRoute aria-hidden="true" className="mx-auto h-6 w-6 text-slate-700 sm:h-8 sm:w-8" />
             </div>
             <h4 className="text-base font-bold text-gray-900">
               {captain.tripsCompleted}
@@ -292,11 +275,7 @@ function CaptainHome() {
           {/* Acceptance Rate */}
           <div className="text-center bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
             <div className="text-base mb-0.5">
-              <img
-                src="https://cdn-icons-png.flaticon.com/128/12095/12095494.png"
-                alt="acceptance"
-                className="h-8 ml-4 w-8 align"
-              />
+              <FaChartLine aria-hidden="true" className="mx-auto h-6 w-6 text-slate-700 sm:h-8 sm:w-8" />
             </div>
             <h4 className="text-base font-bold text-gray-900">
               {captain.acceptanceRate}

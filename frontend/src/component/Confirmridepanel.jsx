@@ -1,4 +1,5 @@
 import React from "react";
+import { FaMapMarkerAlt, FaUserFriends } from "react-icons/fa";
 
 function ConfirmRidePanel({
   confirmRidePanel,
@@ -26,17 +27,17 @@ function ConfirmRidePanel({
 
       {/* Selected Vehicle Preview */}
       <div className="flex flex-col items-center border-b pb-4 mb-4">
-        <img
-          src={selectedVehicle.image}
-          alt={selectedVehicle.name}
-          className="h-24 object-contain mb-2"
-        />
+        {selectedVehicle.icon ? (
+          <selectedVehicle.icon aria-label={selectedVehicle.name} className="mb-2 h-20 w-20 text-slate-800 sm:h-24 sm:w-24" />
+        ) : (
+          <img src={selectedVehicle.image} alt={selectedVehicle.name} className="mb-2 h-24 object-contain" />
+        )}
         <div className="flex items-center gap-2">
           <span className="font-bold text-lg text-gray-900">
             {selectedVehicle.name}
           </span>
           <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 font-medium">
-            👤 {selectedVehicle.capacity}
+            <FaUserFriends aria-hidden="true" className="h-3 w-3" /> {selectedVehicle.capacity}
           </span>
         </div>
         <p className="text-2xl font-extrabold text-black mt-1">
@@ -49,7 +50,7 @@ function ConfirmRidePanel({
         {/* Pickup Location */}
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <div className="w-3 h-3 bg-emerald-600 rounded-full" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-4 w-4 text-emerald-600" />
           </div>
           <div>
             <p className="text-xs text-gray-400 uppercase font-semibold">
@@ -66,7 +67,7 @@ function ConfirmRidePanel({
         {/* Destination Location */}
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-            <div className="w-3 h-3 bg-rose-600 rounded-sm" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-4 w-4 text-rose-600" />
           </div>
           <div>
             <p className="text-xs text-gray-400 uppercase font-semibold">

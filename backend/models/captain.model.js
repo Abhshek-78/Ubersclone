@@ -23,6 +23,10 @@ const captainSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    photo: {
+        type: String,
+        default: '',
+    },
     password: {
         type: String,
         required: true,

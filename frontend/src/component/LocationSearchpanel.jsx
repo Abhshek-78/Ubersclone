@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { FaMapMarkerAlt } from "react-icons/fa";
 
 function LocationSearchpanel({ query, onSelectLocation }) {
   const [locations, setLocations] = useState([]);
@@ -63,11 +64,7 @@ function LocationSearchpanel({ query, onSelectLocation }) {
           className="flex items-center border active:border-black rounded-lg gap-4 mt-3 p-3 cursor-pointer hover:bg-gray-50"
         >
           <div className="bg-[#eee] h-10 w-10 rounded-full flex items-center justify-center shrink-0">
-            <img
-              src="https://img.icons8.com/ios-filled/50/000000/marker.png"
-              alt="location marker"
-              className="w-5 h-5"
-            />
+            <FaMapMarkerAlt aria-hidden="true" className="h-4 w-4 text-slate-700 sm:h-5 sm:w-5" />
           </div>
           <div>
             <h5 className="font-semibold text-black">

@@ -105,6 +105,7 @@ function initializeSocket(server) {
 
         socket.on('accept-ride', (data) => handleRideDecision(socket, true, data));
         socket.on('reject-ride', (data) => handleRideDecision(socket, false, data));
+        socket.on('cancel-ride', (data) => handleRideCancellation(socket, data));
         socket.on('start-ride', (data) => updateRideStatus(socket, 'ongoing', data));
         socket.on('complete-ride', (data) => updateRideStatus(socket, 'completed', data));
 
@@ -152,6 +153,20 @@ async function handleRideDecision(socket, accepted, data = {}) {
     await captainModel.findByIdAndUpdate(captainId, { status: 'busy' });
     await captainModel.findByIdAndUpdate(captainId, { $inc: { requestsAccepted: 1 } });
 
+    let initialRoute = null;
+    const captainLocation = ride.captain?.location;
+    if (Number.isFinite(Number(captainLocation?.ltd)) && Number.isFinite(Number(captainLocation?.log))) {
+        try {
+            const route = await mapService.getLiveRouteFromCoordinates(
+                { latitude: Number(captainLocation.ltd), longitude: Number(captainLocation.log) },
+                ride.pickup,
+            );
+            initialRoute = route.geometry;
+        } catch (error) {
+            console.error('Unable to calculate initial pickup route:', error.message);
+        }
+    }
+
     const captainDetails = {
         id: ride.captain._id,
         name: `${ride.captain.fullname.firstname} ${ride.captain.fullname.lastname || ''}`.trim(),
@@ -159,12 +174,14 @@ async function handleRideDecision(socket, accepted, data = {}) {
         phone: ride.captain.phone || '',
         vehicle: ride.captain.vehical,
         rating: ride.captain.rating || null,
+        location: ride.captain.location || null,
     };
 
     const acceptedRide = {
         rideId: ride._id,
         pickup: ride.pickup,
         destination: ride.destination,
+        route: initialRoute,
         fare: ride.fare,
         otp: ride.otp,
         user: {
@@ -180,6 +197,33 @@ async function handleRideDecision(socket, accepted, data = {}) {
         io.to(ride.user.socketId).emit('ride-accepted', acceptedRide);
     }
     socket.emit('ride-accepted-captain', acceptedRide);
+}
+
+async function handleRideCancellation(socket, data = {}) {
+    const { rideId, userId } = data;
+    if (!rideId || !userId) return;
+
+    const ride = await rideModel.findOneAndUpdate(
+        { _id: rideId, user: userId, status: { $in: ['accept', 'ongoing'] } },
+        { status: 'cancel' },
+        { returnDocument: 'after' },
+    ).populate('captain', 'socketId');
+
+    if (!ride) {
+        socket.emit('ride-action-error', { rideId, message: 'Ride could not be cancelled' });
+        return;
+    }
+
+    if (ride.captain?._id) {
+        await captainModel.findByIdAndUpdate(ride.captain._id, {
+            status: 'active',
+        });
+        etaCache.delete(String(ride.captain._id));
+    }
+
+    const cancellation = { rideId: ride._id, status: ride.status };
+    socket.emit('ride-cancelled', cancellation);
+    if (ride.captain?.socketId) io.to(ride.captain.socketId).emit('ride-cancelled', cancellation);
 }
 
 async function updateRideStatus(socket, status, data = {}) {

@@ -1,3 +1,5 @@
+import { FaCommentDots, FaMapMarkerAlt, FaPhone, FaStar, FaArrowDown } from "react-icons/fa";
+
 function WaitingForDriverPanel({
   waitingForDriver,
   setWaitingForDriver,
@@ -5,6 +7,7 @@ function WaitingForDriverPanel({
   pickup,
   destination,
   etaText,
+  onCancelRide,
 }) {
   // Default fallback data template (overridden by dynamic driverData prop)
   const driver = driverData || {
@@ -44,7 +47,7 @@ function WaitingForDriverPanel({
           aria-label="Hide current ride"
           className="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xl font-bold text-gray-800 hover:bg-gray-200"
         >
-          ↓
+          <FaArrowDown aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
         {/* OTP Container */}
         <div className="bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl text-center">
@@ -68,7 +71,7 @@ function WaitingForDriverPanel({
               className="w-14 h-14 rounded-full object-cover border-2 border-black"
             />
             <span className="absolute -bottom-1 -right-1 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-              ★ {driver.rating}
+              <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {driver.rating}
             </span>
           </div>
 
@@ -103,7 +106,7 @@ function WaitingForDriverPanel({
         {/* Pickup */}
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-            <div className="w-2.5 h-2.5 bg-emerald-600 rounded-full" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-emerald-600" />
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-semibold">
@@ -118,7 +121,7 @@ function WaitingForDriverPanel({
         {/* Destination */}
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-            <div className="w-2.5 h-2.5 bg-rose-600 rounded-sm" />
+            <FaMapMarkerAlt aria-hidden="true" className="h-3.5 w-3.5 text-rose-600" />
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase font-semibold">
@@ -134,12 +137,19 @@ function WaitingForDriverPanel({
       {/* Action Buttons: Call & Message */}
       <div className="flex gap-3">
         <a href={driver.phone ? `tel:${driver.phone}` : undefined} className="flex-1 bg-black text-white font-bold py-3 rounded-xl text-sm hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-          <span>📞</span> Call Driver
+          <FaPhone aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Call Driver
         </a>
         <button className="flex-1 bg-gray-100 text-gray-800 font-bold py-3 rounded-xl text-sm hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-          <span>💬</span> Message
+          <FaCommentDots aria-hidden="true" className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Message
         </button>
       </div>
+      <button
+        type="button"
+        onClick={onCancelRide}
+        className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-bold text-red-700 transition-colors hover:bg-red-100"
+      >
+        Cancel Ride
+      </button>
     </div>
   );
 }

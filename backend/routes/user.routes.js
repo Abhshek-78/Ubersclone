@@ -4,6 +4,7 @@ const {body}=require("express-validator");
 const {route}=require('../app');
 const userController=require('../controllers/userController')
 const authMiddleware=require('../middleware/auth.middleware')
+const profileController = require('../controllers/profile.controller');
 
 const normalizeUserRequest = (req, res, next) => {
     req.body = req.body || {};
@@ -39,6 +40,7 @@ router.post('/login',[
 )
 
 router.get('/profile',authMiddleware.authUser,userController.getUserProfile)
+router.post('/profile/photo', authMiddleware.authUser, profileController.uploadUserPhoto)
 
 router.get('/logout',authMiddleware.authUser,userController.logoutUser)
 

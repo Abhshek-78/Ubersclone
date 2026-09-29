@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const authMiddleware=require('../middleware/auth.middleware');
+const profileController = require('../controllers/profile.controller');
 
 const normalizeCaptainRequest = (req, res, next) => {
     req.body = req.body || {};
@@ -55,6 +56,7 @@ router.post('/login',[
 )
 
 router.get('/profile',authMiddleware.authCaptain,captainController.getCaptainProfile)
+router.post('/profile/photo', authMiddleware.authCaptain, profileController.uploadCaptainPhoto)
 
 router.get('/logout',authMiddleware.authCaptain,captainController.logoutCaptain)
 
