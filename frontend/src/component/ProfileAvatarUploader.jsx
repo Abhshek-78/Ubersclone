@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
 import axios from "axios";
 import { FaUserCircle } from "react-icons/fa";
+import { API_BASE_URL } from "../config";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 function resolvePhotoUrl(photo) {
   if (!photo) return "";
   if (/^https?:\/\//i.test(photo)) return photo;
-  return `${import.meta.env.VITE_BASE_URL}${photo.startsWith("/") ? photo : `/${photo}`}`;
+  return `${API_BASE_URL}${photo.startsWith("/") ? photo : `/${photo}`}`;
 }
 
 function DefaultAvatar() {
@@ -36,7 +37,7 @@ function ProfileAvatarUploader({ photo, name, uploadPath, onUploaded, className 
     reader.onload = async () => {
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}${uploadPath}`,
+          `${API_BASE_URL}${uploadPath}`,
           { imageData: reader.result },
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
         );

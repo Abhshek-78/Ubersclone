@@ -2,6 +2,7 @@ const usermodel=require('../models/usermodel');
 const userServices=require('../services/user.sevice');
 const {validationResult}=require('express-validator');
 const blacklistTokenModel=require('../models/blacklist.model');
+const { isProduction } = require('../config');
 
 module.exports.registerUser=async (req,res,next)=>{
     const errors=validationResult(req);
@@ -55,8 +56,8 @@ module.exports.loginUser=async(req,res,next)=>{
 
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,      // true only when using HTTPS
-            sameSite: "lax",
+            secure: isProduction(),
+            sameSite: isProduction() ? "none" : "lax",
             maxAge: 24 * 60 * 60 * 1000
         });
 

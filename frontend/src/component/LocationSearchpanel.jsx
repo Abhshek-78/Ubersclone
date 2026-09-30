@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import { FaMapMarkerAlt } from "react-icons/fa";
 
 function LocationSearchpanel({ query, onSelectLocation }) {
@@ -19,7 +20,7 @@ function LocationSearchpanel({ query, onSelectLocation }) {
 
       try {
         const response = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/maps/get-suggestion`,
+            `${API_BASE_URL}/maps/get-suggestion`,
             {
               params: { suggestion: trimmedQuery },
               signal: controller.signal,

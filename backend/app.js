@@ -12,9 +12,20 @@ const app = express();
 const cookieParser = require("cookie-parser");
 const mapRoutes = require('./routes/map.routes');
 const rideRoutes = require('./routes/ride.routes');
+const { getAllowedOrigins } = require('./config');
 
 app.use(cookieParser());
-app.use(cors()); 
+const allowedOrigins = getAllowedOrigins();
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        return callback(new Error('Origin is not allowed by CORS'));
+    },
+    credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

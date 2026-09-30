@@ -7,16 +7,20 @@ let io;
 const REQUEST_RADIUS_KM = Number(process.env.RIDE_REQUEST_RADIUS_KM) || 5;
 const ETA_REFRESH_MS = 15000;
 const etaCache = new Map();
+const { getAllowedOrigins } = require('./config');
 
 function captainRoom(captainId) {
     return `captain:${String(captainId)}`;
 }
 
 function initializeSocket(server) {
+    const allowedOrigins = getAllowedOrigins();
+
     io = new Server(server, {
         cors: {
-            origin: '*',
+            origin: allowedOrigins,
             methods: ['GET', 'POST'],
+            credentials: true,
         },
     });
 

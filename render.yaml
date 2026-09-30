@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: ubers-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: MAPBOX_API
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: PORT
+        value: "10000"
+      - key: RIDE_REQUEST_RADIUS_KM
+        value: "5"

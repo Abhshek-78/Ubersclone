@@ -5,6 +5,7 @@ import ConfirmRidePanel from "../component/Confirmridepanel";
 import LookingForDriverPanel from "../component/LookingForDriverPanel";
 import WaitingForDriverPanel from "../component/WaitingForDriverPanel";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import { useSocket } from "../context/useSocket";
 import { UserDataContext } from "../context/UserContext";
 import LiveMap from "../component/LiveMap";
@@ -53,7 +54,7 @@ function Home() {
     setLocationRequested(true);
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/maps/get-address`, {
+        const response = await axios.get(`${API_BASE_URL}/maps/get-address`, {
           params: { latitude: coords.latitude, longitude: coords.longitude },
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
@@ -69,7 +70,7 @@ function Home() {
   const loadRideHistory = async () => {
     setHistoryLoading(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/rides/history`, {
+      const response = await axios.get(`${API_BASE_URL}/rides/history`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setRideHistory(Array.isArray(response.data) ? response.data : []);
@@ -170,7 +171,7 @@ function Home() {
 
     setIsExpanded(false);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/rides/getFare`, {
+      const response = await axios.get(`${API_BASE_URL}/rides/getFare`, {
         params: { pickup, destination },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -185,7 +186,7 @@ function Home() {
 
   }
   async function createRide(vehicleType){
-    return axios.post(`${import.meta.env.VITE_BASE_URL}/rides/create`,{
+    return axios.post(`${API_BASE_URL}/rides/create`,{
       pickup,
       destination,
       vehicleType

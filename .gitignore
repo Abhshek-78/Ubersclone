@@ -1,0 +1,10 @@
+node_modules/
+dist/
+*.log
+.env
+.env.*
+!.env.example
+
+# Uploaded user content
+backend/uploads/profile/*
+!backend/uploads/profile/.gitkeep

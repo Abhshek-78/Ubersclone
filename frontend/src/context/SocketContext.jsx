@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import SocketContext from './socketContext';
+import { API_BASE_URL } from '../config';
 
 export function SocketProvider({ children }) {
   const socketRef = useRef(null);
@@ -8,7 +9,7 @@ export function SocketProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_BASE_URL || 'http://localhost:3000', {
+    const socket = io(API_BASE_URL || window.location.origin, {
       autoConnect: false,
     });
 

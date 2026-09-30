@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
 import uberLogo from "../assets/Uberlogo.png";
+import { API_BASE_URL } from "../config";
 
 function CaptainLogin() {
     const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ function CaptainLogin() {
 
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/captains/login`,
+                `${API_BASE_URL}/captains/login`,
                 captainData
             );
 

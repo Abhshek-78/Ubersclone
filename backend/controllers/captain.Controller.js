@@ -3,6 +3,7 @@ const captainService=require('../services/captain.sevice');
 const { validationResult } = require('express-validator');
 const blacklistModel = require('../models/blacklist.model');
 const rideModel = require('../models/ride.model');
+const { isProduction } = require('../config');
 
 
 
@@ -63,7 +64,12 @@ module.exports.loginCaptain=async(req,res,next)=>{
             return res.status(401).json({message:'invalid email and password'})
         }
         const token=captain.generateAuthToken();
-        res.cookie('token',token);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: isProduction(),
+            sameSite: isProduction() ? 'none' : 'lax',
+            maxAge: 24 * 60 * 60 * 1000,
+        });
         res.status(200).json({token,captain});
     }catch (error) {
         return res.status(401).json({message:'something went wrong ', error: error.message});

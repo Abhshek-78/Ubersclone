@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { API_BASE_URL } from "../config";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import UserProtectedWraper from "./UserProtectedWraper";
@@ -12,7 +13,7 @@ function UserLogout() {
                 const token = localStorage.getItem("token");
 
                 await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/users/logout`,
+                    `${API_BASE_URL}/users/logout`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

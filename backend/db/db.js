@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 async function connectToDb() {
     const mongoUri = process.env.MONGODB_URI;
     if (!mongoUri) {
-        throw new Error("MONGODB_URI is required to connect to MongoDB Atlas");
+        throw new Error("MONGODB_URI is required to connect to Mongo Atlas");
     }
 
     try {

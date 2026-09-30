@@ -107,7 +107,8 @@ Returned if registration fails for another reason.
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:3000/users/register \
+API_URL="${PUBLIC_API_URL:?Set PUBLIC_API_URL before running this example}"
+curl -X POST "$API_URL/users/register" \
   -H "Content-Type: application/json" \
   -d '{
     "fullname": {
@@ -196,7 +197,7 @@ Returned if login fails for another reason.
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:3000/users/login \
+curl -X POST "$API_URL/users/login" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "johndoe@example.com",
@@ -310,7 +311,7 @@ Returned if registration fails for another reason.
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:3000/captains/register \
+curl -X POST "$API_URL/captains/register" \
   -H "Content-Type: application/json" \
   -d '{
     "fullname": { "firstname": "Jane", "lastname": "Doe" },
@@ -391,7 +392,7 @@ Returned when the email or password is incorrect.
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:3000/captains/login \
+curl -X POST "$API_URL/captains/login" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "janedoe@example.com",
@@ -487,7 +488,7 @@ Returned when the token is missing or invalid.
 ### Example Request
 
 ```bash
-curl -X GET http://localhost:3000/captains/logout \
+curl -X GET "$API_URL/captains/logout" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -580,7 +581,7 @@ Returned when the token is missing or invalid.
 ### Example Request
 
 ```bash
-curl -X GET http://localhost:3000/users/logout \
+curl -X GET "$API_URL/users/logout" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -658,7 +659,7 @@ Returned when fare calculation or route lookup fails.
 ### Example Request
 
 ```bash
-curl -G http://localhost:3000/rides/getFare \
+curl -G "$API_URL/rides/getFare" \
   -H "Authorization: Bearer <token>" \
   --data-urlencode "pickup=Bhopal" \
   --data-urlencode "destination=Indore"

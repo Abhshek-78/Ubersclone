@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import RidePopupPanel from "../component/RidePopupPanel";
 import { useSocket } from "../context/useSocket";
 import LiveMap from "../component/LiveMap";
@@ -42,7 +43,7 @@ function CaptainHome() {
     if (!captainId || !isConnected) return undefined;
 
     let cancelled = false;
-    axios.get(`${import.meta.env.VITE_BASE_URL}/captains/profile`, {
+    axios.get(`${API_BASE_URL}/captains/profile`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     }).then(({ data }) => {
       if (!cancelled) setCaptainProfile(data.captain);

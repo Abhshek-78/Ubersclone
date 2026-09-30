@@ -1,4 +1,5 @@
 import uberLogo from "../assets/Uberlogo.png";
+import { API_BASE_URL } from "../config";
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -31,7 +32,7 @@ function UserSignup() {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/users/register`,
+        `${API_BASE_URL}/users/register`,
         newUser
       );
       console.log(response.data);

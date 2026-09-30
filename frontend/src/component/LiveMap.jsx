@@ -4,6 +4,7 @@ import axios from "axios";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { FaCar, FaMapMarkerAlt, FaMotorcycle, FaTaxi } from "react-icons/fa";
+import { API_BASE_URL, MAPBOX_TOKEN } from "../config";
 
 function getVehicleIcon(vehicleType) {
   const normalizedType = String(vehicleType || "car").toLowerCase();
@@ -119,7 +120,7 @@ function LiveMapContent({
   const mapLoadedRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
   const routeRef = useRef(route);
-  const token = import.meta.env.VITE_MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_API;
+  const token = MAPBOX_TOKEN;
 
   useEffect(() => {
     routeRef.current = route;
@@ -185,7 +186,7 @@ function LiveMapContent({
       const addresses = [pickup, destination].filter(Boolean);
       const results = await Promise.all(addresses.map(async (address) => {
         try {
-          const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/maps/getCoordinates`, {
+          const response = await axios.get(`${API_BASE_URL}/maps/getCoordinates`, {
             params: { address },
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           });

@@ -1,4 +1,5 @@
 import uberLogo from "../assets/Uberlogo.png";
+import { API_BASE_URL } from "../config";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
@@ -42,7 +43,7 @@ function CaptainSignup() {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/captains/register`,
+        `${API_BASE_URL}/captains/register`,
         payload
       );
 

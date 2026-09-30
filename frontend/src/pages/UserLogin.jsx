@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 import { UserDataContext } from '../context/UserContext';
 import {useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from "../config";
 
 
 
@@ -22,7 +23,7 @@ function userLogin() {
       password:password
     }
     const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/users/login`,
+        `${API_BASE_URL}/users/login`,
         userData
     );
     if (response.status === 200) {
