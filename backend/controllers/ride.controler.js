@@ -9,7 +9,7 @@ module.exports.createRide = async (req, res) => {
     }
 
     const { pickup, destination, vehicalType, vehicleType } = req.body;
-    const finalVehicleType = vehicleType || vehicalType;
+    const finalVehicleType = normalizeRideVehicleType(vehicleType || vehicalType);
 
     try {
         const ride = await riderService.createRide({
@@ -53,3 +53,11 @@ module.exports.getUserRides = async (req, res) => {
         return res.status(500).json({ message: err.message });
     }
 };
+
+function normalizeRideVehicleType(vehicleType) {
+    const normalized = String(vehicleType || '').trim().toLowerCase().replace(/[_\s-]+/g, '');
+    if (['motorcycle', 'motorbike', 'bike', 'moto', 'ubermoto'].includes(normalized)) return 'motorcycle';
+    if (['auto', 'autorickshaw', 'uberauto'].includes(normalized)) return 'auto';
+    if (['car', 'ubergo', 'sedan'].includes(normalized)) return 'car';
+    return vehicleType;
+}

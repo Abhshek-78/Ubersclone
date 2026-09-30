@@ -1,4 +1,11 @@
-import { FaCommentDots, FaMapMarkerAlt, FaPhone, FaStar, FaArrowDown } from "react-icons/fa";
+import { FaCar, FaCommentDots, FaMapMarkerAlt, FaMotorcycle, FaPhone, FaStar, FaArrowDown, FaTaxi, FaUserCircle } from "react-icons/fa";
+
+function VehicleIcon({ vehicleType, ...props }) {
+  const normalizedType = String(vehicleType || "car").toLowerCase();
+  if (["bike", "motorcycle", "motorbike", "moto"].includes(normalizedType)) return <FaMotorcycle {...props} />;
+  if (["auto", "autorickshaw"].includes(normalizedType)) return <FaTaxi {...props} />;
+  return <FaCar {...props} />;
+}
 
 function WaitingForDriverPanel({
   waitingForDriver,
@@ -12,10 +19,11 @@ function WaitingForDriverPanel({
   // Default fallback data template (overridden by dynamic driverData prop)
   const driver = driverData || {
     name: "Sarthak Sharma",
-    photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdl152hZG22-iND4L3133f9Bip_f9-iO4B1A&s",
+    photo: "",
     vehicleName: "Maruti Suzuki Swift",
+    vehicleType: "car",
     vehicleNumber: "MH 04 AB 1234",
-    vehicleImage: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQCJRWXqN_BI1o00GppW5TLYY-2NLGpFsVAg3rOs4hlw&s=10",
+    vehicleImage: "",
     price: "₹193.20",
     otp: "5821",
     rating: "4.9",
@@ -65,11 +73,7 @@ function WaitingForDriverPanel({
         {/* Driver Details */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img
-              src={driver.photo}
-              alt={driver.name}
-              className="w-14 h-14 rounded-full object-cover border-2 border-black"
-            />
+            {driver.photo ? <img src={driver.photo} alt={driver.name} className="h-14 w-14 rounded-full object-cover border-2 border-black" /> : <FaUserCircle aria-label={driver.name} className="h-14 w-14 text-slate-400" />}
             <span className="absolute -bottom-1 -right-1 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
               <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {driver.rating}
             </span>
@@ -92,11 +96,7 @@ function WaitingForDriverPanel({
 
         {/* Vehicle Image & Price */}
         <div className="text-right flex flex-col items-end">
-          <img
-            src={driver.vehicleImage}
-            alt={driver.vehicleName}
-            className="h-12 object-contain mb-1"
-          />
+          {driver.vehicleImage ? <img src={driver.vehicleImage} alt={driver.vehicleName} className="mb-1 h-12 object-contain" /> : <VehicleIcon vehicleType={driver.vehicleType || driver.vehicleName} aria-label={driver.vehicleName} className="mb-1 h-10 w-10 text-slate-700 sm:h-12 sm:w-12" />}
           <span className="font-extrabold text-lg text-black">{driver.price}</span>
         </div>
       </div>

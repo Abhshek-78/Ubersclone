@@ -9,7 +9,7 @@ import { useSocket } from "../context/useSocket";
 import { UserDataContext } from "../context/UserContext";
 import LiveMap from "../component/LiveMap";
 import ProfileAvatarUploader from "../component/ProfileAvatarUploader";
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 function getUserId() {
   const token = localStorage.getItem("token");
@@ -24,6 +24,7 @@ function getUserId() {
 
 function Home() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHomePanelMinimized, setIsHomePanelMinimized] = useState(false);
   const [vehicalpanel, setVehicalpanel] = useState(false);
   const [confirmRidePanel, setConfirmRidePanel] = useState(false);
   const [lookingForDriverPanel, setLookingForDriverPanel] = useState(false);
@@ -106,6 +107,7 @@ function Home() {
       setCaptainLocation(ride.captain.location || null);
       setRoute(ride.route || null);
       setRidePhase("pickup");
+      setIsHomePanelMinimized(true);
       setLookingForDriverPanel(false);
       setWaitingForDriver(true);
     });
@@ -231,20 +233,37 @@ function Home() {
 
       {/* Main Search Panel */}
       <div
-        className={`bg-white absolute bottom-0 w-full p-5 rounded-t-2xl transition-all duration-500 ease-in-out z-10 ${
-          isExpanded ? "h-full" : "h-auto"
-        }`}
+        className={`bg-white absolute bottom-0 w-full p-5 rounded-t-2xl transition-[transform,height] duration-500 ease-in-out z-10 ${
+          isHomePanelMinimized ? "translate-y-full pointer-events-none" : "translate-y-0"
+        } ${isExpanded ? "h-full" : "h-auto"}`}
       >
         <div className="flex justify-between items-center mb-2">
           <h4 className="text-2xl font-bold text-black">Find the place</h4>
-          {isExpanded && (
+          <div className="flex items-center gap-2">
+            {isExpanded && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(false)}
+                aria-label="Collapse search"
+                title="Collapse search"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-black hover:bg-gray-200"
+              >
+                <FaArrowDown aria-hidden="true" className="h-4 w-4" />
+              </button>
+            )}
             <button
-              onClick={() => setIsExpanded(false)}
-              className="text-black font-bold text-xl px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 cursor-pointer"
+              type="button"
+              onClick={() => {
+                setIsHomePanelMinimized(true);
+                setIsExpanded(false);
+              }}
+              aria-label="Minimize home panel"
+              title="Minimize home panel"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-black hover:bg-gray-200"
             >
-              <FaArrowDown aria-hidden="true" className="h-4 w-4" />
+              <FaChevronDown aria-hidden="true" className="h-4 w-4" />
             </button>
-          )}
+          </div>
         </div>
 
         <form onSubmit={findTrip} className="relative">
@@ -253,6 +272,7 @@ function Home() {
           <input
             onFocus={() => {
               setActiveLocationField("pickup");
+              setIsHomePanelMinimized(false);
               setIsExpanded(true);
               fetchCurrentLocation();
               setVehicalpanel(false);
@@ -269,6 +289,7 @@ function Home() {
           <input
             onFocus={() => {
               setActiveLocationField("destination");
+              setIsHomePanelMinimized(false);
               setIsExpanded(true);
               setConfirmRidePanel(false);
               setLookingForDriverPanel(false);
@@ -308,6 +329,18 @@ function Home() {
           </div>
         )}
       </div>
+
+      {isHomePanelMinimized && (
+        <button
+          type="button"
+          onClick={() => setIsHomePanelMinimized(false)}
+          aria-label="Restore home panel"
+          title="Restore home panel"
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] left-1/2 z-40 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-white text-gray-900 shadow-xl ring-1 ring-black/10 transition hover:bg-gray-50 active:scale-95 sm:h-12 sm:w-12"
+        >
+          <FaChevronUp aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+        </button>
+      )}
 
       <div className="absolute top-4 right-4 z-30">
         <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-gray-900 shadow-lg">

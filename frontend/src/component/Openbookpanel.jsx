@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaCar, FaMotorcycle, FaTaxi, FaUserFriends } from "react-icons/fa";
 
 function Openbookpanel({
@@ -16,8 +15,6 @@ function Openbookpanel({
       description: "Affordable, compact rides",
       vehicleType: "car",
       icon: FaCar,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQCJRWXqN_BI1o00GppW5TLYY-2NLGpFsVAg3rOs4hlw&s=10",
     },
     {
       id: "uberMoto",
@@ -34,8 +31,6 @@ function Openbookpanel({
       description: "No haggling, doorstep pickup",
       vehicleType: "auto",
       icon: FaTaxi,
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE_JyrWPd8oITTsdiEBAW9cmhLBcCU-GpR1Y6YXqfs2A&s=10",
     },
   ];
 
@@ -64,19 +59,17 @@ function Openbookpanel({
       </h3>
 
       <div className="space-y-2 mb-4">
-        {rideOptions.map((ride) => (
-          <div
-            key={ride.id}
-            onClick={() => handleSelectRide(ride)}
-            className="flex items-center justify-between p-3 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200"
-          >
-            <div className="w-16 h-12 flex-shrink-0 flex items-center justify-center">
-              <img
-                src={ride.image}
-                alt={ride.name}
-                className="max-h-full max-w-full object-contain"
-              />
-            </div>
+        {rideOptions.map((ride) => {
+          const RideIcon = ride.icon;
+          return (
+            <div
+              key={ride.id}
+              onClick={() => handleSelectRide(ride)}
+              className="flex items-center justify-between p-3 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200"
+            >
+              <div className="w-16 h-12 flex-shrink-0 flex items-center justify-center">
+                {RideIcon ? <RideIcon aria-label={ride.name} className="h-8 w-8 text-slate-800 sm:h-9 sm:w-9" /> : <img src={ride.image} alt={ride.name} className="max-h-full max-w-full object-contain" />}
+              </div>
 
             <div className="flex-1 ml-3">
               <div className="flex items-center gap-1.5">
@@ -95,8 +88,9 @@ function Openbookpanel({
                 ₹{Number(fares?.[ride.vehicleType] || 0).toFixed(2)}
               </span>
             </div>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

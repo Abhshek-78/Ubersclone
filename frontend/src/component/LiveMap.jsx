@@ -1,7 +1,16 @@
 import { Component, useEffect, useRef, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import axios from "axios";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { FaCar, FaMapMarkerAlt, FaMotorcycle, FaTaxi } from "react-icons/fa";
+
+function getVehicleIcon(vehicleType) {
+  const normalizedType = String(vehicleType || "car").toLowerCase();
+  if (normalizedType === "motorcycle" || normalizedType === "bike") return FaMotorcycle;
+  if (normalizedType === "auto") return FaTaxi;
+  return FaCar;
+}
 
 function updateMarkerElement(element, vehicleType, kind, bearing = 0) {
   if (!element) return;
@@ -11,13 +20,14 @@ function updateMarkerElement(element, vehicleType, kind, bearing = 0) {
     if (!vehicle) {
       vehicle = document.createElement("span");
       vehicle.className = "live-map-marker-vehicle";
-      vehicle.innerHTML = '<svg viewBox="0 0 32 52" aria-hidden="true"><path d="M10.3 3.8C11 2 12.3 1 14.2 1h3.6c1.9 0 3.2 1 3.9 2.8l3.9 10.1c.6 1.6.9 3.2.9 4.9v21.9c0 3-2.4 5.3-5.3 5.3H10.8c-2.9 0-5.3-2.3-5.3-5.3V20.8c0-1.7.3-3.3.9-4.9L10.3 3.8Z"/><path class="live-map-marker-window" d="M10.2 12.8h11.6l-1.9-6.1c-.2-.6-.8-1-1.4-1h-5c-.6 0-1.2.4-1.4 1l-1.9 6.1Z"/><path class="live-map-marker-light" d="M9.2 18.2h13.6v5.1H9.2z"/><circle cx="8.8" cy="39.4" r="2.1"/><circle cx="23.2" cy="39.4" r="2.1"/></svg>';
       element.appendChild(vehicle);
     }
+    const VehicleIcon = getVehicleIcon(vehicleType);
+    vehicle.innerHTML = renderToStaticMarkup(<VehicleIcon aria-hidden="true" />);
     vehicle.dataset.vehicleType = String(vehicleType || "car").toLowerCase();
     vehicle.style.transform = `rotate(${bearing}deg)`;
   } else {
-    element.textContent = kind === "pickup" ? "●" : "■";
+    element.innerHTML = renderToStaticMarkup(<FaMapMarkerAlt aria-hidden="true" />);
   }
   element.setAttribute("aria-label", kind === "captain" ? "Captain location" : kind);
 }

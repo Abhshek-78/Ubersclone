@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from "react-router-dom";
 
 import bgImage from "../assets/landing.png";
+import uberLogo from "../assets/Uberlogo.png";
 
 
 function Landing() {
@@ -12,7 +13,7 @@ function Landing() {
           backgroundImage: `url(${bgImage})`,   
         }}  
       >
-        <img className='w-16 ml-4  mix-blend-screen' src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSK89Kvd8MeWsUHmy36tpZHsTb5aXF2H6VzdMtNJMHdjA&s=10" alt="" />
+        <img className='w-16 ml-4  mix-blend-screen' src={uberLogo} alt="Uber" />
          
         <div className='bg-white pb-5 py-5 px-5'>
           <h2 className='text-3xl font-bold'>Get Started with Uber </h2>

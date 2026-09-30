@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
+import uberLogo from "../assets/Uberlogo.png";
 
 function CaptainLogin() {
     const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ function CaptainLogin() {
                 captainData
             );
 
-            console.log("Login response:", response.data);
+           
 
             if (response.status === 200) {
                 const data = response.data;
@@ -68,7 +69,7 @@ function CaptainLogin() {
           
             <img
                 className="w-16 rounded mix-blend-multiply"
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYHo1ccLWKoeQ7KSWkeLAUmSC0xyDNJD3Dz5GqSZMqCQ&s=10"
+                src={uberLogo}
                 alt="Captain"
             />
 

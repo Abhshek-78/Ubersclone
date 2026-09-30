@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 
 async function connectToDb() {
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+        throw new Error("MONGODB_URI is required to connect to MongoDB Atlas");
+    }
+
     try {
-        await mongoose.connect(process.env.DBCONNECT);
-        console.log("Connected to DB");
+        await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
+        console.log(`Connected to MongoDB Atlas: ${mongoose.connection.name}`);
 
         try {
             await mongoose.connection.collection("users").dropIndex("fullname.email_1");
@@ -14,7 +19,8 @@ async function connectToDb() {
             }
         }
     } catch (err) {
-        console.log(err);
+        console.error("MongoDB Atlas connection failed:", err.message);
+        throw err;
     }
 }
 

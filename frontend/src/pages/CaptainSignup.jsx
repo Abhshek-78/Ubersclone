@@ -1,3 +1,4 @@
+import uberLogo from "../assets/Uberlogo.png";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
@@ -71,7 +72,7 @@ function CaptainSignup() {
     <div className="p-3 flex flex-col justify-between h-screen">
       <img
         className="w-16   rounded mix-blend-multiply"
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYHo1ccLWKoeQ7KSWkeLAUmSC0xyDNJD3Dz5GqSZMqCQ&s=10"
+        src={uberLogo}
         alt=""
       />
       <div>

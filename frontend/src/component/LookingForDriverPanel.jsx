@@ -1,5 +1,4 @@
-import React from 'react'
-import { FaMapMarkerAlt, FaTimes } from "react-icons/fa";
+import { FaCar, FaMapMarkerAlt, FaTimes } from "react-icons/fa";
 
 function LookingForDriverPanel({
   lookingForDriverPanel,
@@ -9,6 +8,7 @@ function LookingForDriverPanel({
   destination,
 }) {
   if (!selectedVehicle) return null;
+  const VehicleIcon = selectedVehicle.icon || FaCar;
 
   return (
     <div
@@ -34,11 +34,11 @@ function LookingForDriverPanel({
         <div className="absolute w-28 h-28 bg-black/5 rounded-full animate-pulse" />
 
         {/* Vehicle Image */}
-        <img
-          src={selectedVehicle.image}
-          alt={selectedVehicle.name}
-          className="h-20 object-contain z-10 relative"
-        />
+        {selectedVehicle.icon || !selectedVehicle.image ? (
+          <VehicleIcon aria-label={selectedVehicle.name} className="relative z-10 h-16 w-16 text-slate-800 sm:h-20 sm:w-20" />
+        ) : (
+          <img src={selectedVehicle.image} alt={selectedVehicle.name} className="relative z-10 h-20 object-contain" />
+        )}
       </div>
 
       {/* Ride Details Card */}

@@ -9,8 +9,6 @@ const userRoute=require('./routes/user.routes');
 const captainRoute=require('./routes/captain.route');
 
 const app = express();  
-const connectToDb=require('./db/db')  ;
-connectToDb();
 const cookieParser = require("cookie-parser");
 const mapRoutes = require('./routes/map.routes');
 const rideRoutes = require('./routes/ride.routes');

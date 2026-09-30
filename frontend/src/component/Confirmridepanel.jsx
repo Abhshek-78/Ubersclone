@@ -1,4 +1,3 @@
-import React from "react";
 import { FaMapMarkerAlt, FaUserFriends } from "react-icons/fa";
 
 function ConfirmRidePanel({
@@ -10,6 +9,7 @@ function ConfirmRidePanel({
   onConfirm,
 }) {
   if (!selectedVehicle) return null;
+  const VehicleIcon = selectedVehicle.icon;
 
   return (
     <div
@@ -27,8 +27,8 @@ function ConfirmRidePanel({
 
       {/* Selected Vehicle Preview */}
       <div className="flex flex-col items-center border-b pb-4 mb-4">
-        {selectedVehicle.icon ? (
-          <selectedVehicle.icon aria-label={selectedVehicle.name} className="mb-2 h-20 w-20 text-slate-800 sm:h-24 sm:w-24" />
+        {VehicleIcon ? (
+          <VehicleIcon aria-label={selectedVehicle.name} className="mb-2 h-20 w-20 text-slate-800 sm:h-24 sm:w-24" />
         ) : (
           <img src={selectedVehicle.image} alt={selectedVehicle.name} className="mb-2 h-24 object-contain" />
         )}

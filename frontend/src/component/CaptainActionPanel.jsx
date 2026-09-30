@@ -1,5 +1,11 @@
-import React from "react";
-import { FaArrowDown, FaArrowUp, FaCommentDots, FaPhone, FaFlagCheckered } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaCar, FaCommentDots, FaFlagCheckered, FaMotorcycle, FaPhone, FaTaxi } from "react-icons/fa";
+
+function VehicleIcon({ vehicleType, ...props }) {
+  const normalizedType = String(vehicleType || "car").toLowerCase();
+  if (["bike", "motorcycle", "motorbike", "moto"].includes(normalizedType)) return <FaMotorcycle {...props} />;
+  if (["auto", "autorickshaw"].includes(normalizedType)) return <FaTaxi {...props} />;
+  return <FaCar {...props} />;
+}
 
 
 function CaptainActionPanel({
@@ -14,7 +20,7 @@ function CaptainActionPanel({
   onStartTrip,
   onFinishTrip,
 }) {
-  const { customer, fare, destination, tripDistance, paymentMode } = ride;
+  const { customer, fare, destination, tripDistance, paymentMode, vehicleType } = ride;
 
   return (
     <div
@@ -70,6 +76,7 @@ function CaptainActionPanel({
           </div>
 
           <div className="flex gap-2">
+            <VehicleIcon vehicleType={vehicleType} aria-label={`${vehicleType || "car"} vehicle`} className="h-5 w-5 self-center text-slate-700 sm:h-6 sm:w-6" />
             <a
               href={`tel:${customer.phone}`}
               className="w-9 h-9 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center text-sm hover:bg-gray-100"

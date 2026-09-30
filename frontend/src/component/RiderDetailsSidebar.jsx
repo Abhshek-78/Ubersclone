@@ -1,4 +1,3 @@
-import React from "react";
 import { FaCommentDots, FaMapMarkerAlt, FaPhone, FaStar, FaTimes } from "react-icons/fa";
 
 function RiderDetailsSidebar({

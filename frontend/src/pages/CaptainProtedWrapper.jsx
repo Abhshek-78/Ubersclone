@@ -28,7 +28,7 @@ function CaptainProtectedWraper({ children }) {
                 },
             })
             .then((response) => {
-                console.log("Captain profile:", response.data);
+               
 
                 if (response.status === 200) {
                     setCaptain(response.data.captain);

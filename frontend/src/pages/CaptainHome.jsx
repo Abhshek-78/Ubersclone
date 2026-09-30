@@ -56,7 +56,7 @@ function CaptainHome() {
   }, [captainId, isConnected]);
 
   useEffect(() => {
-    if (!captainId) return undefined;
+    if (!captainId || !isConnected) return undefined;
 
     const join = (location) => sendMessage("join", {
       userType: "captain",

@@ -1,3 +1,4 @@
+import uberLogo from "../assets/Uberlogo.png";
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
@@ -59,7 +60,7 @@ function UserSignup() {
     <div className='p-7 flex flex-col justify-between h-screen'>
       <img
         className='w-16 rounded mix-blend-difference'
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS6UR4arY3Uf0cQ-X-jBCGKxhozmz_deTFf5dU1F4FEcA&s=10"
+        src={uberLogo}
         alt=""
       />
 

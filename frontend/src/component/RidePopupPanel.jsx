@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FaMapMarkerAlt, FaStar } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaMapMarkerAlt, FaStar, FaUserCircle } from "react-icons/fa";
 
 function RidePopupPanel({
   rideRequest,
@@ -13,8 +13,7 @@ function RidePopupPanel({
     user: {
       name: "Rohit Verma",
       phone: "+91 98765 43210",
-      photo:
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      photo: "",
       rating: "4.85",
       trips: "36 trips",
     },
@@ -30,10 +29,13 @@ function RidePopupPanel({
   const [timeLeft, setTimeLeft] = useState(15);
 
   useEffect(() => {
-    if (!ridePopupPanel) {
-      setTimeLeft(15);
-      return;
-    }
+    if (ridePopupPanel) return undefined;
+    const resetTimer = setTimeout(() => setTimeLeft(15), 0);
+    return () => clearTimeout(resetTimer);
+  }, [ridePopupPanel]);
+
+  useEffect(() => {
+    if (!ridePopupPanel) return undefined;
 
     if (timeLeft === 0) {
       if (onDeclineRide) onDeclineRide();
@@ -72,11 +74,7 @@ function RidePopupPanel({
       <div className="flex items-center justify-between bg-gray-50 p-3.5 rounded-2xl border border-gray-100 mb-4">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img
-              src={ride.user.photo}
-              alt={ride.user.name}
-              className="w-11 h-11 rounded-full object-cover border-2 border-black"
-            />
+            {ride.user.photo ? <img src={ride.user.photo} alt={ride.user.name} className="h-11 w-11 rounded-full object-cover border-2 border-black" /> : <FaUserCircle aria-label={ride.user.name} className="h-11 w-11 text-slate-400" />}
             <span className="absolute -bottom-1 -right-1 bg-black text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">
               <FaStar aria-hidden="true" className="h-2.5 w-2.5" /> {ride.user.rating}
             </span>

@@ -8,6 +8,10 @@ const REQUEST_RADIUS_KM = Number(process.env.RIDE_REQUEST_RADIUS_KM) || 5;
 const ETA_REFRESH_MS = 15000;
 const etaCache = new Map();
 
+function captainRoom(captainId) {
+    return `captain:${String(captainId)}`;
+}
+
 function initializeSocket(server) {
     io = new Server(server, {
         cors: {
@@ -34,6 +38,7 @@ function initializeSocket(server) {
                     return;
                 }
             }else if(userType === 'captain'){
+                socket.join(captainRoom(userId));
                 const captain = await captainModel.findByIdAndUpdate(userId, {
                     socketId:socket.id,
                     status: 'active',
@@ -181,6 +186,7 @@ async function handleRideDecision(socket, accepted, data = {}) {
         rideId: ride._id,
         pickup: ride.pickup,
         destination: ride.destination,
+        vehicleType: ride.vehicleType,
         route: initialRoute,
         fare: ride.fare,
         otp: ride.otp,
@@ -308,6 +314,7 @@ async function dispatchRideRequest(rideId) {
             name: `${ride.user?.fullname?.firstname || ''} ${ride.user?.fullname?.lastname || ''}`.trim(),
             email: ride.user?.email,
             phone: ride.user?.phone || '',
+            photo: ride.user?.photo || '',
         },
     };
 
@@ -318,7 +325,7 @@ async function dispatchRideRequest(rideId) {
             ? `${distanceInKm(pickup.latitude, pickup.longitude, captain.location.ltd, captain.location.log).toFixed(1)} km`
             : 'Location unavailable';
 
-        io.to(captain.socketId).emit('ride-request', {
+        io.to(captainRoom(captain._id)).emit('ride-request', {
             ...request,
             distanceToPickup,
         });
@@ -351,11 +358,12 @@ async function markCaptainOffline(captainId) {
 }
 
 function normalizeVehicleType(vehicleType) {
-    const normalized = String(vehicleType || '').trim().toLowerCase();
-    if (normalized === 'motorcycle' || normalized === 'bike' || normalized === 'motorbike') {
+    const normalized = String(vehicleType || '').trim().toLowerCase().replace(/[_\s-]+/g, '');
+    if (['motorcycle', 'motorbike', 'bike', 'moto', 'ubermoto'].includes(normalized)) {
         return 'bike';
     }
-    if (normalized === 'car' || normalized === 'auto') return normalized;
+    if (['auto', 'autorickshaw', 'uberauto'].includes(normalized)) return 'auto';
+    if (['car', 'ubergo', 'sedan'].includes(normalized)) return 'car';
     return '';
 }
 
