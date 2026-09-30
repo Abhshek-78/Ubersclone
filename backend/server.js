@@ -6,8 +6,11 @@ const app=require('./app');
 const { initializeSocket } = require('./socket');
 const connectToDb = require('./db/db');
 
-const requiredEnvironment = ['MONGODB_URI', 'JWT_SECRET', 'MAPBOX_API', 'PORT', 'CLIENT_ORIGIN'];
+const requiredEnvironment = ['MONGODB_URI', 'JWT_SECRET', 'MAPBOX_API', 'PORT'];
 const missingEnvironment = requiredEnvironment.filter((name) => !process.env[name]);
+if (!process.env.CLIENT_URL && !process.env.CLIENT_ORIGIN) {
+    missingEnvironment.push('CLIENT_URL (or CLIENT_ORIGIN)');
+}
 if (missingEnvironment.length > 0) {
     throw new Error(`Missing required environment variables: ${missingEnvironment.join(', ')}`);
 }
