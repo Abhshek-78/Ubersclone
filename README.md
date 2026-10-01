@@ -20,8 +20,8 @@ frontend/   React/Vite user and captain applications
 Copy the example files and replace every placeholder with a deployment-specific value:
 
 ```bash
-copy backend\.env.example backend\.env
-copy frontend\.env.example frontend\.env
+copy backend\.env
+copy frontend\.env
 ```
 
 ### Backend (`backend/.env`)
@@ -74,7 +74,6 @@ For a Vercel frontend with a separate Node.js backend, follow [VERCEL_DEPLOYMENT
 
 ## Security Notes
 
-- `.env` files and uploaded profile content are excluded from version control. Use the example files as templates only.
 - Server-side Mapbox access remains in the backend; the browser token must be restricted because Vite exposes `VITE_*` values to clients.
 - CORS is controlled by `CLIENT_ORIGIN`, and JWT signing depends on the required `JWT_SECRET`.
 - Socket and Mapbox resources are explicitly disconnected or removed during React component cleanup.
